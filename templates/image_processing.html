@@ -3,7 +3,6 @@
 {% block title %}Trang Demo Đề Tài - Image Processing{% endblock %}
 
 {% block content %}
-
 <div class="upload-section">
     <form method="POST" enctype="multipart/form-data" class="mb-4">
         {% csrf_token %}
@@ -13,26 +12,20 @@
     </form>
 </div>
 
-<!-- Hiển thị thông báo lỗi nếu có -->
-{% if error %}
-    <div class="alert alert-danger">
-        {{ error }}
-    </div>
-{% endif %}
-
 {% if image_files %}
 <div class="row">
     <!-- Bên trái: Công cụ điều chỉnh ảnh -->
-    <div class="col-md-3">
+    <div class="col-md-3" id="image-tools" style="overflow-y: auto;">
         <h2>Image Processing Tools</h2>
 
+        <!-- Toggle buttons for image processing tools -->
         <div class="tool-section mb-3">
             <label for="toggle-bg">Remove Background:</label>
             <input type="checkbox" id="toggle-bg" class="form-check-input">
         </div>
 
         <div class="tool-section mb-3">
-            <label for="grayscale">Grayscale:</label>
+            <label for="grayscale">Convert to Grayscale:</label>
             <input type="checkbox" id="grayscale" class="form-check-input">
         </div>
 
@@ -45,46 +38,76 @@
             <label for="brightness-slider">Brightness:</label>
             <input type="range" id="brightness-slider" class="form-range" min="-100" max="100" value="0">
         </div>
+
+        <div class="tool-section mb-3">
+            <label for="apply-morphology">Apply Morphology:</label>
+            <input type="checkbox" id="apply-morphology" class="form-check-input">
+        </div>
+
+        <div class="tool-section mb-3">
+            <label for="morph-kernel-size">Morphology Kernel Size:</label>
+            <input type="range" id="morph-kernel-size" class="form-range" min="1" max="20" value="3">
+        </div>
+
+        <div class="tool-section mb-3">
+            <label for="morph-iterations">Morphology Iterations:</label>
+            <input type="range" id="morph-iterations" class="form-range" min="1" max="10" value="1">
+        </div>
     </div>
 
-    <!-- Bên phải: Hiển thị toàn bộ ảnh -->
-    <div class="col-md-9">
+    <!-- Bên phải: Hiển thị toàn bộ ảnh với tabs -->
+    <div class="col-md-9" id="image-tabs-container">
         <div class="container">
-            <!-- Hiển thị item id -->
             <h4>Current Item: <span id="item-id">{{ current_item_id }}</span></h4>
 
-            <!-- Nút điều hướng -->
-            <div class="navigation-buttons">
+            <div class="navigation-buttons mb-3">
                 <button id="prev-button" class="btn btn-secondary" {% if is_first_item %}disabled{% endif %}>Previous</button>
                 <button id="next-button" class="btn btn-secondary" {% if is_last_item %}disabled{% endif %}>Next</button>
             </div>
 
-            <!-- Nửa trên: Processed Images -->
-            <h2>Processing</h2>
-            <div class="image-grid">
-                {% for processed_image in processed_images %}
-                <div class="image-square" id="processed-{{ processed_image.name|lower }}">
-                    {% if processed_image.url %}
-                    <img src="{{ processed_image.url }}" alt="{{ processed_image.name }}" class="img-fluid">
-                    {% else %}
-                    {{ processed_image.name }}
-                    {% endif %}
-                </div>
-                {% endfor %}
-            </div>
+            <!-- Tabs for Processing and Original images -->
+            <ul class="nav nav-tabs" id="imageTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="processing-tab" data-bs-toggle="tab" href="#processing" role="tab" aria-controls="processing" aria-selected="true">Processing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="original-tab" data-bs-toggle="tab" href="#original" role="tab" aria-controls="original" aria-selected="false">Original</a>
+                </li>
+            </ul>
 
-            <!-- Nửa dưới: Original Images -->
-            <h2>Original</h2>
-            <div class="image-grid">
-                {% for image in image_files %}
-                <div class="image-square" id="original-{{ image.name|lower }}">
-                    {% if image.url %}
-                    <img src="{{ image.url }}" alt="{{ image.name }}" class="img-fluid">
-                    {% else %}
-                    {{ image.name }}
-                    {% endif %}
+            <!-- Tab content -->
+            <div class="tab-content" id="imageTabsContent">
+                <!-- Tab for Processed Images -->
+                <div class="tab-pane fade show active" id="processing" role="tabpanel" aria-labelledby="processing-tab">
+                    <h2>Processing</h2>
+                    <div class="image-grid">
+                        {% for processed_image in processed_images %}
+                        <div class="image-square" id="processed-{{ processed_image.name|lower }}">
+                            {% if processed_image.url %}
+                            <img src="{{ processed_image.url }}" alt="{{ processed_image.name }}" class="img-fluid">
+                            {% else %}
+                            {{ processed_image.name }}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
-                {% endfor %}
+
+                <!-- Tab for Original Images -->
+                <div class="tab-pane fade" id="original" role="tabpanel" aria-labelledby="original-tab">
+                    <h2>Original</h2>
+                    <div class="image-grid">
+                        {% for image in image_files %}
+                        <div class="image-square" id="original-{{ image.name|lower }}">
+                            {% if image.url %}
+                            <img src="{{ image.url }}" alt="{{ image.name }}" class="img-fluid">
+                            {% else %}
+                            {{ image.name }}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
