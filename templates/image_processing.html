@@ -8,7 +8,7 @@
     <form method="POST" enctype="multipart/form-data" class="mb-4">
         {% csrf_token %}
         <label for="folder_path">Upload thư mục hình ảnh:</label>
-        <input type="file" name="folder_path" webkitdirectory directory multiple class="form-control">  <!-- multiple -->
+        <input type="file" name="folder_path" webkitdirectory directory multiple class="form-control">
         <button type="submit" class="btn btn-primary mt-3">Upload</button>
     </form>
 </div>
@@ -50,6 +50,15 @@
     <!-- Bên phải: Hiển thị toàn bộ ảnh -->
     <div class="col-md-9">
         <div class="container">
+            <!-- Hiển thị item id -->
+            <h4>Current Item: <span id="item-id">{{ current_item_id }}</span></h4>
+
+            <!-- Nút điều hướng -->
+            <div class="navigation-buttons">
+                <button id="prev-button" class="btn btn-secondary" {% if is_first_item %}disabled{% endif %}>Previous</button>
+                <button id="next-button" class="btn btn-secondary" {% if is_last_item %}disabled{% endif %}>Next</button>
+            </div>
+
             <!-- Nửa trên: Processed Images -->
             <h2>Processing</h2>
             <div class="image-grid">
@@ -80,5 +89,6 @@
         </div>
     </div>
 </div>
+
 {% endif %}
 {% endblock %}
