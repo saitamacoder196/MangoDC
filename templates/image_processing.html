@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Trang Demo Đề Tài - Image Processing{% endblock %}
+
+{% block content %}
+
+<div class="upload-section">
+    <form method="POST" enctype="multipart/form-data" class="mb-4">
+        {% csrf_token %}
+        <label for="folder_path">Upload thư mục hình ảnh:</label>
+        <input type="file" name="folder_path" webkitdirectory directory multiple class="form-control">  <!-- multiple -->
+        <button type="submit" class="btn btn-primary mt-3">Upload</button>
+    </form>
+</div>
+
+<!-- Hiển thị thông báo lỗi nếu có -->
+{% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+{% endif %}
+
+{% if image_files %}
+<div class="row">
+    <!-- Bên trái: Công cụ điều chỉnh ảnh -->
+    <div class="col-md-3">
+        <h2>Image Processing Tools</h2>
+
+        <div class="tool-section mb-3">
+            <label for="toggle-bg">Remove Background:</label>
+            <input type="checkbox" id="toggle-bg" class="form-check-input">
+        </div>
+
+        <div class="tool-section mb-3">
+            <label for="grayscale">Grayscale:</label>
+            <input type="checkbox" id="grayscale" class="form-check-input">
+        </div>
+
+        <div class="tool-section mb-3">
+            <label for="threshold-slider">Threshold:</label>
+            <input type="range" id="threshold-slider" class="form-range" min="0" max="255" value="128">
+        </div>
+
+        <div class="tool-section mb-3">
+            <label for="brightness-slider">Brightness:</label>
+            <input type="range" id="brightness-slider" class="form-range" min="-100" max="100" value="0">
+        </div>
+    </div>
+
+    <!-- Bên phải: Hiển thị toàn bộ ảnh -->
+    <div class="col-md-9">
+        <div class="container">
+            <!-- Nửa trên: Processed Images -->
+            <h2>Processing</h2>
+            <div class="image-grid">
+                {% for processed_image in processed_images %}
+                <div class="image-square" id="processed-{{ processed_image.name|lower }}">
+                    {% if processed_image.url %}
+                    <img src="{{ processed_image.url }}" alt="{{ processed_image.name }}" class="img-fluid">
+                    {% else %}
+                    {{ processed_image.name }}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Nửa dưới: Original Images -->
+            <h2>Original</h2>
+            <div class="image-grid">
+                {% for image in image_files %}
+                <div class="image-square" id="original-{{ image.name|lower }}">
+                    {% if image.url %}
+                    <img src="{{ image.url }}" alt="{{ image.name }}" class="img-fluid">
+                    {% else %}
+                    {{ image.name }}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
