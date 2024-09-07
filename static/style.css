@@ -1,0 +1,155 @@
+/* Reset default styles */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F1E7C6; /* Background color: Warm Vanilla */
+    margin: 0;
+    padding: 20px;
+}
+
+h2 {
+    text-align: center;
+    margin-bottom: 10px;
+    color: #333; /* Darker color for headers */
+}
+
+.container {
+    width: 90%;
+    margin: 0 auto;
+}
+
+/* Upload section */
+.upload-section {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.upload-section input[type="file"] {
+    padding: 10px;
+    border: 2px solid #7CB47E; /* Border color: Mossy Meadow */
+    background-color: #EED68B; /* Background: Honeyed Harvest */
+    color: #333;
+    border-radius: 5px;
+}
+
+/* Tool Section */
+.tool-section {
+    margin-bottom: 20px;
+    background-color: #EED68B; /* Honeyed Harvest background for tools */
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.tool-section label {
+    margin-right: 10px;
+    color: #333; /* Dark text */
+    font-weight: bold;
+}
+
+.tool-section input[type="checkbox"], 
+.tool-section input[type="range"] {
+    accent-color: #E59C45; /* Amber Ambiance for accents */
+}
+
+.tool-section h2 {
+    color: #E59C45; /* Amber Ambiance for section title */
+}
+
+/* Image Section */
+.image-section {
+    margin-bottom: 30px;
+}
+
+.image-section h3 {
+    margin-bottom: 10px;
+    color: #7CB47E; /* Mossy Meadow */
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.image-square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f9f9f9;
+    border: 2px solid #ddd; /* Default border */
+    height: 150px;
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+    position: relative;
+    transition: background-color 0.3s ease-in-out;
+}
+
+/* Add border color based on the color palette */
+.image-square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f9f9f9;
+    border: 2px solid #ddd;
+    height: 150px;
+    text-align: center;
+    font-size: 1.2em;
+    color: #666;
+    position: relative;
+    transition: background-color 0.3s ease-in-out;
+}
+/* When there is an image */
+.image-square.has-image img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Placeholder for empty image boxes */
+.image-square img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.image-square.has-image span {
+    display: none;
+}
+
+/* Placeholder styling */
+.image-box.placeholder {
+    height: 150px; /* Placeholder height */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f4f4f4;
+    color: #999;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.image-box {
+    border: 2px solid #E59C45; /* Amber Ambiance for image box borders */
+    padding: 10px;
+    text-align: center;
+    transition: transform 0.2s ease-in-out;
+}
+
+.image-box img {
+    width: 100%;
+    height: auto;
+}
+
+/* Hover effect for image boxes */
+.image-box:hover {
+    transform: scale(1.05);
+    background-color: #F1E7C6; /* Slight color change on hover */
+}
