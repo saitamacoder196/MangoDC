@@ -3,13 +3,20 @@ window.onload = function() {
     const nextButton = document.getElementById('next-button');
     const currentItemIndex = parseInt(new URLSearchParams(window.location.search).get('item_index') || '0');
 
+    // Function to save scroll position
+    function saveScrollPosition() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    }
+
     // Event handler for the Next button
     nextButton.addEventListener('click', function() {
+        saveScrollPosition(); // Lưu vị trí cuộn trước khi chuyển
         window.location.href = `${window.location.pathname}?item_index=${currentItemIndex + 1}`;
     });
 
     // Event handler for the Previous button
     prevButton.addEventListener('click', function() {
+        saveScrollPosition(); // Lưu vị trí cuộn trước khi chuyển
         window.location.href = `${window.location.pathname}?item_index=${currentItemIndex - 1}`;
     });
 
@@ -36,6 +43,12 @@ window.onload = function() {
             }
         }
         return cookieValue;
+    }
+
+    // Restore scroll position after reload
+    const scrollPosition = sessionStorage.getItem('scrollPosition');
+    if (scrollPosition) {
+        window.scrollTo(0, parseInt(scrollPosition));
     }
 
     // Function to save settings to the server via AJAX
@@ -68,7 +81,10 @@ window.onload = function() {
             }
         })
         .then(response => response.json())
-        .then(data => console.log(data))
+        .then(data => {
+            console.log(data);
+            saveScrollPosition(); // Lưu vị trí cuộn khi cập nhật settings
+        })
         .catch(error => console.error('Error:', error));
     }
 

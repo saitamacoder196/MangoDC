@@ -153,3 +153,8 @@ h2 {
     transform: scale(1.05);
     background-color: #F1E7C6; /* Slight color change on hover */
 }
+
+.nav-link.active {
+    font-weight: bold;
+    color: #ff7f50; /* Đổi màu của menu item đang được chọn */
+}

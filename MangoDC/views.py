@@ -1,14 +1,9 @@
-import cv2
-from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
-from PIL import Image
 import os
+import concurrent.futures
 
-import numpy as np
-from MangoDC import settings
-from .helper import invert_black_and_white, process_image, remove_background, convert_to_grayscale, resize_image, threshold_image
-from PIL import ImageEnhance
+from MangoDC.helper import process_with_user_options
 # View cho trang Home
 def home(request):
     return render(request, 'home.html')
@@ -21,10 +16,21 @@ def experiment(request):
 def demo(request):
     return render(request, 'demo.html')
 
-# View to handle image upload and processing
-import concurrent.futures
 
-# View to handle image upload and processing
+def sort_image_files(image_files):
+    # Define a custom sorting key to arrange by Left, Center, Right, and index
+    def sort_key(item):
+        name = item['name']
+        # Extract the corner name and the index number
+        corner, index = name.split('_')
+        index = int(index)  # Convert the index to integer for proper sorting
+        # Assign priority to Left, Center, Right
+        priority = {'Left': 0, 'Center': 1, 'Right': 2}
+        return (priority.get(corner, 3), index)
+
+    # Sort the image files based on the custom sort key
+    return sorted(image_files, key=sort_key)
+
 def image_processing(request):
     context = {}
 
@@ -68,105 +74,49 @@ def image_processing(request):
     current_item_index = int(request.GET.get('item_index', 0))
     current_item_id = item_ids[current_item_index] if item_ids else None
 
-    # Load session settings into context
+    # Get values from query params
+    toggle_bg = request.GET.get('toggle-bg', 'false') == 'true'
+    grayscale = request.GET.get('grayscale', 'false') == 'true'
+    threshold = int(request.GET.get('threshold-slider', 128))
+    brightness = int(request.GET.get('brightness-slider', 0))
+    apply_morphology = request.GET.get('apply-morphology', 'false') == 'true'
+    morph_kernel_size = int(request.GET.get('morph-kernel-size', 3))
+    morph_iterations = int(request.GET.get('morph-iterations', 1))
+    active_tab = request.GET.get('active_tab', 'processing')
+
+    # Load settings into context
     context.update({
-        'toggle_bg': request.session.get('toggle_bg', False),
-        'grayscale': request.session.get('grayscale', False),
-        'threshold': request.session.get('threshold', 128),
-        'brightness': request.session.get('brightness', 0),
-        'apply_morphology': request.session.get('apply_morphology', False),
-        'morph_kernel_size': request.session.get('morph_kernel_size', 3),
-        'morph_iterations': request.session.get('morph_iterations', 1),
-        'active_tab': request.session.get('active_tab', 'processing'),
+        'toggle_bg': toggle_bg,
+        'grayscale': grayscale,
+        'threshold': threshold,
+        'brightness': brightness,
+        'apply_morphology': apply_morphology,
+        'morph_kernel_size': morph_kernel_size,
+        'morph_iterations': morph_iterations,
+        'active_tab': active_tab,
         'is_first_item': current_item_index == 0,
         'is_last_item': current_item_index == len(item_ids) - 1,
         'current_item_id': current_item_id
     })
 
     if current_item_id:
-        # Limit to 12 images
-        image_files = list(image_data[current_item_id].values())[:12]
-        processed_images = []
+        # Retrieve image files for the current item and sort them
+        image_files = list(image_data[current_item_id].values())
+        sorted_image_files = sort_image_files(image_files)  # Sort the image files
+        processed_images = [None] * len(sorted_image_files)  # Initialize a list to store processed images
 
         # Use ThreadPoolExecutor for multithreaded image processing
         with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
-            # Map images to threads and execute processing in parallel
-            futures = {executor.submit(process_with_user_options, img, request): img for img in image_files}
-            
-            # Wait for all threads to complete and gather the results
-            for future in concurrent.futures.as_completed(futures):
-                _, updated_img_obj = future.result()
-                processed_images.append(updated_img_obj)
+            futures = {executor.submit(process_with_user_options, img, request): i for i, img in enumerate(sorted_image_files)}
 
-        # Update context with image data
-        context['image_files'] = image_files
+            # Wait for all threads to complete and place the results in the correct order
+            for future in concurrent.futures.as_completed(futures):
+                i = futures[future]  # Get the index of the processed image
+                _, updated_img_obj = future.result()
+                processed_images[i] = updated_img_obj  # Place the result in the correct position
+
+        # Update context with sorted and processed image data
+        context['image_files'] = sorted_image_files
         context['processed_images'] = processed_images
 
     return render(request, 'image_processing.html', context)
-
-# Helper function to process the image with user options
-def process_with_user_options(img_obj, request):
-    """
-    Apply image processing options from user session settings and save the processed image
-    with 'processed_' prefix in its filename. Return the processed image and updated img_obj.
-    """
-    # Retrieve settings from session
-    toggle_bg = request.session.get('toggle_bg', False)
-    grayscale = request.session.get('grayscale', False)
-    threshold = request.session.get('threshold', 128)
-    brightness = request.session.get('brightness', 0)
-    apply_morphology = request.session.get('apply_morphology', False)
-    morph_kernel_size = request.session.get('morph_kernel_size', 3)
-    morph_iterations = request.session.get('morph_iterations', 1)
-
-    # Load the original image
-    original_image_path = os.path.join(settings.MEDIA_ROOT, os.path.basename(img_obj['url']))
-    processed_image_name = f"processed_{os.path.basename(img_obj['url'])}"
-    processed_image_path = os.path.join(settings.MEDIA_ROOT, processed_image_name)
-
-    # If the processed image exists, skip processing and return the cached image
-    if os.path.exists(processed_image_path):
-        return None, {
-            'url': os.path.join('/media', processed_image_name),
-            'name': os.path.basename(img_obj['url'])
-        }
-
-    # Process the image if not cached
-    image = Image.open(original_image_path)
-
-    # Step 1: Resize image
-    image = resize_image(image)
-
-    # Step 2: Remove background if enabled
-    if toggle_bg:
-        image = remove_background(image)
-        image = invert_black_and_white(image)
-
-    # Step 3: Convert to grayscale if enabled
-    if grayscale:
-        image = convert_to_grayscale(image)
-
-    # Step 4: Apply threshold if enabled
-    if grayscale and threshold > 0:
-        image = threshold_image(image, threshold)
-
-    # Step 5: Apply morphology if enabled
-    if apply_morphology:
-        image_np = np.array(image)
-        kernel = np.ones((morph_kernel_size, morph_kernel_size), np.uint8)
-        image_np = cv2.morphologyEx(image_np, cv2.MORPH_OPEN, kernel, iterations=morph_iterations)
-        image = Image.fromarray(image_np)
-
-    # Step 6: Adjust brightness
-    if brightness != 0:
-        enhancer = ImageEnhance.Brightness(image)
-        image = enhancer.enhance(1 + (brightness / 100.0))
-
-    # Save the processed image to the /media/ folder
-    image.save(processed_image_path)
-
-    # Return the processed image and the updated img_obj
-    return image, {
-        'url': os.path.join('/media', processed_image_name),  # Return relative URL with '/media' prefix
-        'name': os.path.basename(img_obj['url'])  # Return the original filename as 'name'
-    }

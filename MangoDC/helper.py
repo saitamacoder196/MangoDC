@@ -4,7 +4,9 @@ import cv2
 from rembg import remove
 import os
 from scipy.spatial import distance
+from PIL import ImageEnhance
 
+from MangoDC import settings
 # Hàm remove background
 def remove_background(image):
     fixed = remove(image)
@@ -185,3 +187,71 @@ def invert_black_and_white(image):
     image_np[white_pixels] = [0, 0, 0]
     
     return Image.fromarray(image_np)
+
+# Helper function to process the image with user options
+def process_with_user_options(img_obj, request):
+    """
+    Apply image processing options from user query parameters and save the processed image
+    with 'processed_' prefix in its filename. Return the processed image and updated img_obj.
+    """
+    # Get values from query params
+    toggle_bg = request.GET.get('toggle-bg', 'false') == 'true'
+    grayscale = request.GET.get('grayscale', 'false') == 'true'
+    threshold = int(request.GET.get('threshold-slider', 128))
+    brightness = int(request.GET.get('brightness-slider', 0))
+    apply_morphology = request.GET.get('apply-morphology', 'false') == 'true'
+    morph_kernel_size = int(request.GET.get('morph-kernel-size', 3))
+    morph_iterations = int(request.GET.get('morph-iterations', 1))
+
+    # Load the original image
+    original_image_path = os.path.join(settings.MEDIA_ROOT, os.path.basename(img_obj['url']))
+    processed_image_name = f"processed_{os.path.basename(img_obj['url'])}"
+    processed_image_path = os.path.join(settings.MEDIA_ROOT, processed_image_name)
+
+    # If the processed image exists, skip processing and return the cached image
+    if os.path.exists(processed_image_path):
+        return None, {
+            'url': os.path.join('/media', processed_image_name),
+            'name': os.path.basename(img_obj['url'])
+        }
+
+    # Process the image if not cached
+    image = Image.open(original_image_path)
+
+    # Step 1: Resize image
+    image = image.resize((224, 224))
+
+    # Step 2: Remove background if enabled
+    # if toggle_bg:
+    #     image = remove_background(image)
+
+    # Step 3: Convert to grayscale if enabled
+    if grayscale:
+        image = image.convert('L')
+
+    # Step 4: Apply threshold if enabled
+    if grayscale and threshold > 0:
+        image_np = np.array(image)
+        _, image_np = cv2.threshold(image_np, threshold, 255, cv2.THRESH_BINARY)
+        image = Image.fromarray(image_np)
+
+    # Step 5: Apply morphology if enabled
+    if apply_morphology:
+        image_np = np.array(image)
+        kernel = np.ones((morph_kernel_size, morph_kernel_size), np.uint8)
+        image_np = cv2.morphologyEx(image_np, cv2.MORPH_OPEN, kernel, iterations=morph_iterations)
+        image = Image.fromarray(image_np)
+
+    # Step 6: Adjust brightness
+    if brightness != 0:
+        enhancer = ImageEnhance.Brightness(image)
+        image = enhancer.enhance(1 + (brightness / 100.0))
+
+    # Save the processed image to the /media/ folder
+    image.save(processed_image_path)
+
+    # Return the processed image and the updated img_obj
+    return image, {
+        'url': os.path.join('/media', processed_image_name),
+        'name': os.path.basename(img_obj['url'])
+    }
