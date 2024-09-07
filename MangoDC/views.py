@@ -1,9 +1,14 @@
+import cv2
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
 from PIL import Image
 import os
-from MangoDC import settings
 
+import numpy as np
+from MangoDC import settings
+from .helper import invert_black_and_white, process_image, remove_background, convert_to_grayscale, resize_image, threshold_image
+from PIL import ImageEnhance
 # View cho trang Home
 def home(request):
     return render(request, 'home.html')
@@ -16,123 +21,152 @@ def experiment(request):
 def demo(request):
     return render(request, 'demo.html')
 
-# Helper function to process images
-def process_image(image: Image.Image):
-    image = image.convert('L')  # Convert image to grayscale (example)
-    return image, None
+# View to handle image upload and processing
+import concurrent.futures
 
 # View to handle image upload and processing
 def image_processing(request):
     context = {}
 
-    # Initialize processed_images as an empty list
-    processed_images = []
-
-    # Check if the request is POST and contains uploaded files
     if request.method == 'POST' and request.FILES.getlist('folder_path'):
         files = request.FILES.getlist('folder_path')
         fs = FileSystemStorage()
-
         image_data = {}
-        item_ids = []  # List to store unique item-ids
-        processed_data = {}  # To store processed images by item_id
+        item_ids = []
 
-        # Save files and process images
         for file in files:
-            file_name_without_ext = os.path.splitext(file.name)[0]
-            file_name_parts = file_name_without_ext.split('-')
+            file_name_parts = os.path.splitext(file.name)[0].split('-')
 
+            # Ensure correct naming convention
             if len(file_name_parts) < 4:
-                continue  # Ignore files that don't follow the naming convention
+                continue
 
-            item_id = '-'.join(file_name_parts[:3])  # Combine first 3 parts to form item-id
-            corner_name = file_name_parts[-1]  # The last part is the corner name
+            item_id = '-'.join(file_name_parts[:3])
+            corner_name = file_name_parts[-1]
 
-            # Add item_id to the list of item ids
-            if item_id not in item_ids:
-                item_ids.append(item_id)
-
-            # Store original image data
+            # Store image data for unique item_id
             if item_id not in image_data:
                 image_data[item_id] = {}
+                item_ids.append(item_id)
 
             if corner_name not in image_data[item_id]:
+                # Save file and update image data
                 file_path = fs.save(file.name, file)
                 file_url = fs.url(file_path)
-                image_data[item_id][corner_name] = {
-                    'url': file_url,
-                    'name': corner_name
-                }
+                image_data[item_id][corner_name] = {'url': file_url, 'name': corner_name}
 
-                # Process image and save processed version
-                image = Image.open(os.path.join(settings.MEDIA_ROOT, file.name))
-                processed_image, _ = process_image(image)
-                processed_image_name = f'processed_{file.name}'
-                processed_image_path = os.path.join(settings.MEDIA_ROOT, processed_image_name)
-                processed_image.save(processed_image_path)
-
-                # Store processed images
-                if item_id not in processed_data:
-                    processed_data[item_id] = {}
-
-                processed_data[item_id][corner_name] = {
-                    'url': fs.url(processed_image_name),
-                    'name': corner_name
-                }
-
-        # Store the image data, item_ids, and processed data in the session
+        # Store data in session only once
         request.session['image_data'] = image_data
         request.session['item_ids'] = item_ids
-        request.session['processed_data'] = processed_data
 
-    # If the request is GET (navigation through items)
     else:
-        # Retrieve image data, item_ids, and processed_data from session
+        # Retrieve session data if not a POST request
         image_data = request.session.get('image_data', {})
         item_ids = request.session.get('item_ids', [])
-        processed_data = request.session.get('processed_data', {})
 
-    # Get the current item-id from request or default to the first one
+    # Set the current item based on index
     current_item_index = int(request.GET.get('item_index', 0))
     current_item_id = item_ids[current_item_index] if item_ids else None
 
-    # Check if it's the first or last item
-    context['is_first_item'] = current_item_index == 0
-    context['is_last_item'] = current_item_index == len(item_ids) - 1
-    context['current_item_id'] = current_item_id
+    # Load session settings into context
+    context.update({
+        'toggle_bg': request.session.get('toggle_bg', False),
+        'grayscale': request.session.get('grayscale', False),
+        'threshold': request.session.get('threshold', 128),
+        'brightness': request.session.get('brightness', 0),
+        'apply_morphology': request.session.get('apply_morphology', False),
+        'morph_kernel_size': request.session.get('morph_kernel_size', 3),
+        'morph_iterations': request.session.get('morph_iterations', 1),
+        'active_tab': request.session.get('active_tab', 'processing'),
+        'is_first_item': current_item_index == 0,
+        'is_last_item': current_item_index == len(item_ids) - 1,
+        'current_item_id': current_item_id
+    })
 
-    # Define the full list of expected corner names
-    expected_corners = ['Right_1', 'Right_2', 'Right_3', 'Right_4', 
-                        'Left_1', 'Left_2', 'Left_3', 'Left_4', 
-                        'Center_1', 'Center_2', 'Center_3', 'Center_4']
-
-    # Get images for the current item
     if current_item_id:
-        # Original images
-        image_files = list(image_data[current_item_id].values())  # Get existing original images
+        # Limit to 12 images
+        image_files = list(image_data[current_item_id].values())[:12]
+        processed_images = []
 
-        # Processed images
-        processed_images = list(processed_data[current_item_id].values()) if current_item_id in processed_data else []
+        # Use ThreadPoolExecutor for multithreaded image processing
+        with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+            # Map images to threads and execute processing in parallel
+            futures = {executor.submit(process_with_user_options, img, request): img for img in image_files}
+            
+            # Wait for all threads to complete and gather the results
+            for future in concurrent.futures.as_completed(futures):
+                _, updated_img_obj = future.result()
+                processed_images.append(updated_img_obj)
 
-        # Find which corners are missing for both original and processed images
-        existing_corners = {img['name'] for img in image_files}
-        missing_corners = [corner for corner in expected_corners if corner not in existing_corners]
-
-        # Add placeholders for missing corners in original images
-        for missing_corner in missing_corners:
-            image_files.append({'url': None, 'name': missing_corner})
-
-        # Add placeholders for missing corners in processed images
-        existing_processed_corners = {img['name'] for img in processed_images}
-        missing_processed_corners = [corner for corner in expected_corners if corner not in existing_processed_corners]
-        for missing_corner in missing_processed_corners:
-            processed_images.append({'url': None, 'name': missing_corner})
-
-        # Ensure we only return 12 images for both original and processed
-        image_files = image_files[:12]
-        processed_images = processed_images[:12]
-
+        # Update context with image data
         context['image_files'] = image_files
         context['processed_images'] = processed_images
 
     return render(request, 'image_processing.html', context)
+
+# Helper function to process the image with user options
+def process_with_user_options(img_obj, request):
+    """
+    Apply image processing options from user session settings and save the processed image
+    with 'processed_' prefix in its filename. Return the processed image and updated img_obj.
+    """
+    # Retrieve settings from session
+    toggle_bg = request.session.get('toggle_bg', False)
+    grayscale = request.session.get('grayscale', False)
+    threshold = request.session.get('threshold', 128)
+    brightness = request.session.get('brightness', 0)
+    apply_morphology = request.session.get('apply_morphology', False)
+    morph_kernel_size = request.session.get('morph_kernel_size', 3)
+    morph_iterations = request.session.get('morph_iterations', 1)
+
+    # Load the original image
+    original_image_path = os.path.join(settings.MEDIA_ROOT, os.path.basename(img_obj['url']))
+    processed_image_name = f"processed_{os.path.basename(img_obj['url'])}"
+    processed_image_path = os.path.join(settings.MEDIA_ROOT, processed_image_name)
+
+    # If the processed image exists, skip processing and return the cached image
+    if os.path.exists(processed_image_path):
+        return None, {
+            'url': os.path.join('/media', processed_image_name),
+            'name': os.path.basename(img_obj['url'])
+        }
+
+    # Process the image if not cached
+    image = Image.open(original_image_path)
+
+    # Step 1: Resize image
+    image = resize_image(image)
+
+    # Step 2: Remove background if enabled
+    if toggle_bg:
+        image = remove_background(image)
+        image = invert_black_and_white(image)
+
+    # Step 3: Convert to grayscale if enabled
+    if grayscale:
+        image = convert_to_grayscale(image)
+
+    # Step 4: Apply threshold if enabled
+    if grayscale and threshold > 0:
+        image = threshold_image(image, threshold)
+
+    # Step 5: Apply morphology if enabled
+    if apply_morphology:
+        image_np = np.array(image)
+        kernel = np.ones((morph_kernel_size, morph_kernel_size), np.uint8)
+        image_np = cv2.morphologyEx(image_np, cv2.MORPH_OPEN, kernel, iterations=morph_iterations)
+        image = Image.fromarray(image_np)
+
+    # Step 6: Adjust brightness
+    if brightness != 0:
+        enhancer = ImageEnhance.Brightness(image)
+        image = enhancer.enhance(1 + (brightness / 100.0))
+
+    # Save the processed image to the /media/ folder
+    image.save(processed_image_path)
+
+    # Return the processed image and the updated img_obj
+    return image, {
+        'url': os.path.join('/media', processed_image_name),  # Return relative URL with '/media' prefix
+        'name': os.path.basename(img_obj['url'])  # Return the original filename as 'name'
+    }
