@@ -1,14 +1,20 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
 {% block title %}Trang Demo Đề Tài - Image Processing{% endblock %}
 
 {% block content %}
 <div class="upload-section">
-    <form method="POST" enctype="multipart/form-data" class="mb-4">
+    <form method="POST" enctype="multipart/form-data" class="d-flex justify-content-between align-items-center mb-4">
         {% csrf_token %}
-        <label for="folder_path">Upload thư mục hình ảnh:</label>
-        <input type="file" name="folder_path" webkitdirectory directory multiple class="form-control">
-        <button type="submit" class="btn btn-primary mt-3">Upload</button>
+        <div class="file-input-wrapper d-flex align-items-center">
+            <label for="folder_path" class="me-3">Choose Folder:</label>
+            <input type="file" name="folder_path" webkitdirectory directory multiple class="form-control">
+            <button type="submit" class="btn btn-load ms-2">
+                <i class="fas fa-upload"></i> Load
+            </button>
+        </div>
     </form>
 </div>
 
@@ -17,38 +23,31 @@
     <!-- Bên trái: Công cụ điều chỉnh ảnh -->
     <div class="col-md-3" id="image-tools" style="overflow-y: auto;">
         <h2>Image Processing Tools</h2>
-
         <!-- Toggle buttons for image processing tools -->
         <div class="tool-section mb-3">
             <label for="toggle-bg">Remove Background:</label>
             <input type="checkbox" id="toggle-bg" class="form-check-input" {% if toggle_bg %}checked{% endif %}>
         </div>
-
         <div class="tool-section mb-3">
             <label for="grayscale">Convert to Grayscale:</label>
             <input type="checkbox" id="grayscale" class="form-check-input" {% if grayscale %}checked{% endif %}>
         </div>
-
         <div class="tool-section mb-3">
             <label for="threshold-slider">Threshold:</label>
             <input type="range" id="threshold-slider" class="form-range" min="0" max="255" value="{{ threshold }}">
         </div>
-
         <div class="tool-section mb-3">
             <label for="brightness-slider">Brightness:</label>
             <input type="range" id="brightness-slider" class="form-range" min="-100" max="100" value="{{ brightness }}">
         </div>
-
         <div class="tool-section mb-3">
             <label for="apply-morphology">Apply Morphology:</label>
             <input type="checkbox" id="apply-morphology" class="form-check-input" {% if apply_morphology %}checked{% endif %}>
         </div>
-
         <div class="tool-section mb-3">
             <label for="morph-kernel-size">Morphology Kernel Size:</label>
             <input type="range" id="morph-kernel-size" class="form-range" min="1" max="20" value="{{ morph_kernel_size }}">
         </div>
-
         <div class="tool-section mb-3">
             <label for="morph-iterations">Morphology Iterations:</label>
             <input type="range" id="morph-iterations" class="form-range" min="1" max="10" value="{{ morph_iterations }}">
@@ -57,65 +56,71 @@
 
     <!-- Bên phải: Hiển thị toàn bộ ảnh với tabs -->
     <div class="col-md-9" id="image-tabs-container">
-        <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-3">
             <h4>Current Item: <span id="item-id">{{ current_item_id }}</span></h4>
+            <div class="d-flex">
+                <button id="prev-button" class="btn btn-secondary me-2">
+                    <i class="fas fa-arrow-left"></i> Previous
+                </button>
+                <button id="next-button" class="btn btn-secondary">
+                    <i class="fas fa-arrow-right"></i> Next
+                </button>
+            </div>
+        </div>
 
-            <div class="navigation-buttons mb-3">
-                <button id="prev-button" class="btn btn-secondary" {% if is_first_item %}disabled{% endif %}>Previous</button>
-                <button id="next-button" class="btn btn-secondary" {% if is_last_item %}disabled{% endif %}>Next</button>
+        <!-- Tabs for Processing and Original images -->
+        <ul class="nav nav-tabs" id="imageTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link {% if active_tab == 'processing' %}active{% endif %}" id="processing-tab" data-bs-toggle="tab" href="#processing" role="tab" aria-controls="processing" aria-selected="true">Processing</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if active_tab == 'original' %}active{% endif %}" id="original-tab" data-bs-toggle="tab" href="#original" role="tab" aria-controls="original" aria-selected="false">Original</a>
+            </li>
+        </ul>
+
+        <!-- Tab content -->
+        <div class="tab-content" id="imageTabsContent">
+            <!-- Tab for Processed Images -->
+            <div class="tab-pane fade show {% if active_tab == 'processing' %}active{% endif %}" id="processing" role="tabpanel" aria-labelledby="processing-tab">
+                <h2>Processing</h2>
+                <div class="image-grid">
+                    {% for processed_image in processed_images %}
+                    <div class="image-square" id="processed-{{ processed_image.name|lower }}">
+                        {% if processed_image.url %}
+                        <img src="{{ processed_image.url }}" alt="{{ processed_image.name }}" class="img-fluid">
+                        {% else %}
+                        {{ processed_image.name }}
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
 
-            <!-- Tabs for Processing and Original images -->
-            <ul class="nav nav-tabs" id="imageTabs" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link {% if active_tab == 'processing' %}active{% endif %}" id="processing-tab"
-                        data-bs-toggle="tab" href="#processing" role="tab" aria-controls="processing"
-                        aria-selected="true">Processing</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if active_tab == 'original' %}active{% endif %}" id="original-tab"
-                        data-bs-toggle="tab" href="#original" role="tab" aria-controls="original"
-                        aria-selected="false">Original</a>
-                </li>
-            </ul>
-
-            <!-- Tab content -->
-            <div class="tab-content" id="imageTabsContent">
-                <!-- Tab for Processed Images -->
-                <div class="tab-pane fade show {% if active_tab == 'processing' %}active{% endif %}" id="processing" role="tabpanel" aria-labelledby="processing-tab">
-                    <h2>Processing</h2>
-                    <div class="image-grid">
-                        {% for processed_image in processed_images %}
-                        <div class="image-square" id="processed-{{ processed_image.name|lower }}">
-                            {% if processed_image.url %}
-                            <img src="{{ processed_image.url }}" alt="{{ processed_image.name }}" class="img-fluid">
-                            {% else %}
-                            {{ processed_image.name }}
-                            {% endif %}
-                        </div>
-                        {% endfor %}
+            <!-- Tab for Original Images -->
+            <div class="tab-pane fade {% if active_tab == 'original' %}active{% endif %}" id="original" role="tabpanel" aria-labelledby="original-tab">
+                <h2>Original</h2>
+                <div class="image-grid">
+                    {% for image in image_files %}
+                    <div class="image-square" id="original-{{ image.name|lower }}">
+                        {% if image.url %}
+                        <img src="{{ image.url }}" alt="{{ image.name }}" class="img-fluid">
+                        {% else %}
+                        {{ image.name }}
+                        {% endif %}
                     </div>
-                </div>
-
-                <!-- Tab for Original Images -->
-                <div class="tab-pane fade {% if active_tab == 'original' %}active{% endif %}" id="original" role="tabpanel" aria-labelledby="original-tab">
-                    <h2>Original</h2>
-                    <div class="image-grid">
-                        {% for image in image_files %}
-                        <div class="image-square" id="original-{{ image.name|lower }}">
-                            {% if image.url %}
-                            <img src="{{ image.url }}" alt="{{ image.name }}" class="img-fluid">
-                            {% else %}
-                            {{ image.name }}
-                            {% endif %}
-                        </div>
-                        {% endfor %}
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>
     </div>
 </div>
-
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'image_processing.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'image_processing.css' %}">
 {% endblock %}

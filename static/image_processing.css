@@ -1,0 +1,56 @@
+/* Upload section */
+.upload-section {
+    text-align: left;
+    margin-bottom: 20px;
+}
+
+.upload-section .file-input-wrapper {
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-load {
+    background-color: #007BFF;
+    color: white;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 5px;
+}
+
+.btn-load i {
+    margin-right: 5px;
+}
+
+/* Button styles */
+.btn-primary {
+    background-color: #E59C45;
+    border-color: #E59C45;
+}
+
+.btn-secondary i {
+    margin-right: 5px;
+}
+
+/* Styling for the tab */
+.nav-tabs {
+    margin-bottom: 20px;
+}
+
+.nav-tabs .nav-link {
+    background-color: #EED68B; /* Change the background color to distinguish from the page */
+    color: #333;
+    border: 1px solid #ddd;
+    margin-right: 5px;
+}
+
+.nav-tabs .nav-link.active {
+    background-color: #007BFF; /* Highlight the active tab */
+    color: white;
+}
+
+/* Tab content */
+.tab-content {
+    border: 1px solid #ddd;
+    padding: 15px;
+    background-color: #fff;
+}
