@@ -1,10 +1,65 @@
 {% extends 'base.html' %}
-
-{% block title %}Trang Demo Đề Tài - Demo{% endblock %}
+{% load static %}
+{% block title %}Image Upload and Disease Detection{% endblock %}
 
 {% block content %}
-<section id="demo">
-    <h2>Demo</h2>
-    <p>Trang này sẽ hiển thị phần demo của dự án.</p>
-</section>
+<div class="container">
+    <!-- Step 1: Folder Upload -->
+    <div id="step-1" class="step active">
+        <h2>Select Folder to Upload Images</h2>
+        <input type="file" id="image-folder" webkitdirectory directory multiple class="file-input">
+        <button id="load-images" class="btn">Load Images</button>
+    </div>
+
+    <!-- Step 2: Image Display -->
+    <div id="step-2" class="step">
+        <h2>Loaded Images</h2>
+        <div class="image-grid" id="original-images">
+            <!-- Original images will be displayed here -->
+        </div>
+        <button id="run-process" class="btn">Run</button>
+    </div>
+
+    <!-- Step 3: Loading Screen -->
+    <div id="step-3" class="step">
+        <h2>Processing Images...</h2>
+        <div class="loading-spinner"></div>
+    </div>
+
+    <!-- Step 4: Processed Images -->
+    <div id="step-4" class="step">
+        <h2>Processed Images</h2>
+        <div class="image-grid" id="processed-images">
+            <!-- Processed images will be displayed here -->
+        </div>
+        <button id="show-results" class="btn">Show Results</button>
+    </div>
+
+    <!-- Step 5: Disease Detection Results -->
+    <div id="step-5" class="step">
+        <h2>Disease Detection Results</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Disease</th>
+                    <th>Image Corner</th>
+                    <th>Affected Area (px²)</th>
+                    <th>Percentage Affected (%)</th>
+                </tr>
+            </thead>
+            <tbody id="disease-results">
+                <!-- Disease detection results will be displayed here -->
+            </tbody>
+        </table>
+        <h3>Conclusion: <span id="conclusion"></span></h3>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'demo.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'demo.css' %}">
 {% endblock %}

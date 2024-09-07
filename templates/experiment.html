@@ -1,10 +1,86 @@
 {% extends 'base.html' %}
 
+{% load static %}
+
 {% block title %}Trang Demo Đề Tài - Experiment{% endblock %}
 
 {% block content %}
 <section id="experiment">
-    <h2>Experiment</h2>
-    <p>Trang này sẽ hiển thị thông tin về các thí nghiệm trong dự án.</p>
+    <div class="container">
+        <!-- Step 1: Select Folder -->
+        <div id="step-1" class="step active">
+            <h2>Step 1: Select Test Folder</h2>
+            <input type="file" id="test-folder" webkitdirectory directory multiple class="file-input">
+            <button id="next-to-step-2" class="btn">Next: Select Model File</button>
+        </div>
+
+        <!-- Step 2: Select Model -->
+        <div id="step-2" class="step">
+            <h2>Step 2: Select Model File</h2>
+            <input type="file" id="model-file" class="file-input">
+            <button id="start-test" class="btn">Test</button>
+        </div>
+
+        <!-- Step 3: Loading -->
+        <div id="step-3" class="step">
+            <h2>Running Test...</h2>
+            <div class="loading-spinner"></div>
+        </div>
+
+        <!-- Step 4: Display Results -->
+        <div id="step-4" class="step">
+            <h2>Test Results</h2>
+            <div id="metrics">
+                <h3>Classification Metrics</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Precision</th>
+                            <th>Recall</th>
+                            <th>F1 Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Example data -->
+                        <tr>
+                            <td>Class 1</td>
+                            <td>0.89</td>
+                            <td>0.88</td>
+                            <td>0.87</td>
+                        </tr>
+                        <tr>
+                            <td>Class 2</td>
+                            <td>0.78</td>
+                            <td>0.75</td>
+                            <td>0.76</td>
+                        </tr>
+                        <tr>
+                            <td>Total</td>
+                            <td>0.83</td>
+                            <td>0.82</td>
+                            <td>0.82</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="charts">
+                <h3>Confusion Matrix</h3>
+                <div class="chart" id="confusion-matrix"></div>
+
+                <h3>Precision-Recall Curve</h3>
+                <div class="chart" id="precision-recall-curve"></div>
+            </div>
+        </div>
+    </div>
 </section>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'experiment.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'experiment.css' %}">
 {% endblock %}
