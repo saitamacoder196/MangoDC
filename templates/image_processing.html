@@ -126,6 +126,40 @@
 
 {% block extra_js %}
     <script src="{% static 'js/image_processing.js' %}"></script>
+    <py-script>
+        from pyscript import Element
+        import numpy as np
+        from PIL import Image
+        import js
+        
+        def process_green_channel(img_element, green_min, green_max):
+            img_src = img_element.getAttribute('src')
+            # Lấy hình ảnh từ URL
+            img = Image.open(js.fetch(img_src).blob())
+            img_np = np.array(img)
+        
+            green_channel = img_np[:, :, 1]
+            mask = (green_channel >= green_min) & (green_channel <= green_max)
+            
+            # Set các pixel ngoài ngưỡng màu xanh lá thành màu trắng
+            img_np[~mask] = [255, 255, 255]
+            processed_img = Image.fromarray(img_np)
+            
+            # Hiển thị hình ảnh đã xử lý
+            processed_img.save('processed_img.png')
+            img_element.setAttribute('src', 'processed_img.png')
+        
+        def update_processing_image(*args):
+            green_min = int(Element('green-min-slider').value)
+            green_max = int(Element('green-max-slider').value)
+            
+            img_element = Element('processed-img').element
+            process_green_channel(img_element, green_min, green_max)
+        
+        # Lắng nghe sự kiện thay đổi của slider
+        Element('green-min-slider').element.oninput = update_processing_image
+        Element('green-max-slider').element.oninput = update_processing_image
+    </py-script>
 {% endblock %}
 
 {% block extra_css %}
