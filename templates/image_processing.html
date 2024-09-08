@@ -23,6 +23,13 @@
     <!-- Bên trái: Công cụ điều chỉnh ảnh -->
     <div class="col-md-3" id="image-tools" style="overflow-y: auto;">
         <h2>Image Processing Tools</h2>
+        <div class="tool-section mb-3">
+            <input type="checkbox" id="toggle-green-filter" class="form-check-input">
+            <label for="green-range-slider">Green Channel Filter:</label>
+            <input type="range" id="green-min-slider" class="form-range" min="0" max="255" value="0" disabled>
+            <input type="range" id="green-max-slider" class="form-range" min="0" max="255" value="255" disabled>
+            <span>Min: <span id="green-min-value">0</span></span> - <span>Max: <span id="green-max-value">255</span></span>
+        </div>
         <!-- Toggle buttons for image processing tools -->
         <div class="tool-section mb-3">
             <label for="toggle-bg">Remove Background:</label>

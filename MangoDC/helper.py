@@ -202,7 +202,9 @@ def process_with_user_options(img_obj, request):
     apply_morphology = request.GET.get('apply-morphology', 'false') == 'true'
     morph_kernel_size = int(request.GET.get('morph-kernel-size', 3))
     morph_iterations = int(request.GET.get('morph-iterations', 1))
-
+    toggle_green_filter = request.GET.get('toggle_green_filter', 'false') == 'true'
+    green_min = int(request.GET.get('green_min', 0))
+    green_max = int(request.GET.get('green_max', 255))
     # Load the original image
     original_image_path = os.path.join(settings.MEDIA_ROOT, os.path.basename(img_obj['url']))
     processed_image_name = f"processed_{os.path.basename(img_obj['url'])}"
@@ -247,6 +249,14 @@ def process_with_user_options(img_obj, request):
         enhancer = ImageEnhance.Brightness(image)
         image = enhancer.enhance(1 + (brightness / 100.0))
 
+    # Apply Green Channel Filter only if the checkbox is checked
+    if toggle_green_filter:
+        image_np = np.array(image)
+        green_channel = image_np[:, :, 1]  # Extract the G channel
+        mask = (green_channel >= green_min) & (green_channel <= green_max)
+        image_np[~mask] = [255, 255, 255]  # Set pixels outside the range to white
+        image = Image.fromarray(image_np)
+        
     # Save the processed image to the /media/ folder
     image.save(processed_image_path)
 

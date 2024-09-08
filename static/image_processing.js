@@ -1,88 +1,101 @@
-window.onload = function() {
-    const prevButton = document.getElementById('prev-button');
-    const nextButton = document.getElementById('next-button');
+$(document).ready(function() {
     const currentItemIndex = parseInt(new URLSearchParams(window.location.search).get('item_index') || '0');
 
     // Event handler for the Next button
-    if (nextButton) {
-        nextButton.addEventListener('click', function() {
-            window.location.href = `${window.location.pathname}?item_index=${currentItemIndex + 1}`;
-        });
-    }
+    $('#next-button').on('click', function() {
+        window.location.href = `${window.location.pathname}?item_index=${currentItemIndex + 1}`;
+    });
 
     // Event handler for the Previous button
-    if (prevButton) {
-        prevButton.addEventListener('click', function() {
-            window.location.href = `${window.location.pathname}?item_index=${currentItemIndex - 1}`;
-        });
-    }
+    $('#prev-button').on('click', function() {
+        window.location.href = `${window.location.pathname}?item_index=${currentItemIndex - 1}`;
+    });
 
     // Set the height of the image tools section to match the height of the right content
-    const imageTools = document.getElementById('image-tools');
-    const imageTabsContainer = document.getElementById('image-tabs-container');
-    if (imageTabsContainer && imageTools) {
-        const rightContentHeight = imageTabsContainer.offsetHeight;
-        imageTools.style.height = rightContentHeight + 'px';
+    const imageTools = $('#image-tools');
+    const imageTabsContainer = $('#image-tabs-container');
+
+    if (imageTabsContainer.length && imageTools.length) {
+        const rightContentHeight = imageTabsContainer.height();
+        imageTools.height(rightContentHeight);
     }
+
+    // Green channel filter related elements
+    const greenMinSlider = $('#green-min-slider');
+    const greenMaxSlider = $('#green-max-slider');
+    const greenMinValue = $('#green-min-value');
+    const greenMaxValue = $('#green-max-value');
+    const toggleGreenFilter = $('#toggle-green-filter');
+
+    // Enable/disable green channel sliders based on checkbox state
+    toggleGreenFilter.on('change', function() {
+        const isChecked = $(this).is(':checked');
+        greenMinSlider.prop('disabled', !isChecked);
+        greenMaxSlider.prop('disabled', !isChecked);
+        saveSettings();  // Save settings immediately when checkbox is toggled
+    });
+
+    // Update green channel values on slider input
+    greenMinSlider.on('input', function() {
+        greenMinValue.text($(this).val());
+        saveSettings();
+    });
+
+    greenMaxSlider.on('input', function() {
+        greenMaxValue.text($(this).val());
+        saveSettings();
+    });
 
     // Function to get the CSRF token from cookies
     function getCSRFToken() {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, 'csrftoken'.length + 1) === 'csrftoken=') {
-                    cookieValue = decodeURIComponent(cookie.substring('csrftoken'.length + 1));
-                    break;
-                }
+        const name = 'csrftoken=';
+        const cookies = document.cookie.split(';');
+
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].trim();
+            if (cookie.indexOf(name) === 0) {
+                return decodeURIComponent(cookie.substring(name.length));
             }
         }
-        return cookieValue;
+
+        return null;
     }
 
     // Function to save settings to the server via AJAX
     function saveSettings() {
-        const toggleBg = document.getElementById('toggle-bg').checked;
-        const grayscale = document.getElementById('grayscale').checked;
-        const threshold = document.getElementById('threshold-slider').value;
-        const brightness = document.getElementById('brightness-slider').value;
-        const applyMorphology = document.getElementById('apply-morphology').checked;
-        const morphKernelSize = document.getElementById('morph-kernel-size').value;
-        const morphIterations = document.getElementById('morph-iterations').value;
-        const activeTab = document.querySelector('.nav-link.active').getAttribute('id');
+        const data = {
+            toggle_green_filter: toggleGreenFilter.is(':checked'),
+            green_min: greenMinSlider.val(),
+            green_max: greenMaxSlider.val(),
+            toggle_bg: $('#toggle-bg').is(':checked'),
+            grayscale: $('#grayscale').is(':checked'),
+            threshold: $('#threshold-slider').val(),
+            brightness: $('#brightness-slider').val(),
+            apply_morphology: $('#apply-morphology').is(':checked'),
+            morph_kernel_size: $('#morph-kernel-size').val(),
+            morph_iterations: $('#morph-iterations').val(),
+            active_tab: $('.nav-link.active').attr('id')
+        };
 
-        const data = new FormData();
-        data.append('toggle_bg', toggleBg);
-        data.append('grayscale', grayscale);
-        data.append('threshold', threshold);
-        data.append('brightness', brightness);
-        data.append('apply_morphology', applyMorphology);
-        data.append('morph_kernel_size', morphKernelSize);
-        data.append('morph_iterations', morphIterations);
-        data.append('active_tab', activeTab);
-
-        fetch(window.location.href, {
-            method: 'POST',
-            body: data,
+        $.ajax({
+            url: window.location.href,
+            type: 'POST',
+            data: data,
             headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRFToken': getCSRFToken()  // Include the CSRF token in the headers
+                'X-CSRFToken': getCSRFToken()
+            },
+            success: function(response) {
+                console.log(response);
+            },
+            error: function(error) {
+                console.error('Error:', error);
             }
-        })
-        .then(response => response.json())
-        .then(data => console.log(data))
-        .catch(error => console.error('Error:', error));
+        });
     }
 
     // Add event listeners for image processing tools
-    const inputs = document.querySelectorAll('#image-tools input, #image-tools select');
-    inputs.forEach(input => {
-        input.addEventListener('input', saveSettings);
-    });
+    $('#image-tools input, #image-tools select').on('input change', saveSettings);
 
-    const tabs = document.querySelectorAll('.nav-link');
-    tabs.forEach(tab => {
-        tab.addEventListener('click', saveSettings);
-    });
-};
+    // Save settings when tab is changed
+    $('.nav-link').on('click', saveSettings);
+});
