@@ -1,0 +1,106 @@
+
+
+h2 {
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.step {
+    display: none;
+}
+
+.step.active {
+    display: block;
+}
+
+.file-input {
+    display: block;
+    margin: 20px auto;
+    padding: 10px;
+    border: 2px solid #7CB47E;
+    border-radius: 5px;
+    background-color: #EED68B;
+    color: #333;
+}
+
+.btn {
+    background-color: #E59C45;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+}
+
+.btn:hover {
+    background-color: #d27a2e;
+}
+
+.loading-spinner {
+    border: 8px solid #f3f3f3;
+    border-top: 8px solid #E59C45;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+.image-square {
+    width: 100%;
+    padding-bottom: 100%; /* Keep aspect ratio */
+    position: relative;
+    background-color: #f9f9f9;
+    border: 2px solid #ddd;
+}
+
+.image-square img {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th, td {
+    padding: 10px;
+    text-align: center;
+}
+
+th {
+    background-color: #EED68B;
+    color: #333;
+}
+
+h3 {
+    margin-top: 20px;
+    color: #333;
+}
+
+.center-button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}

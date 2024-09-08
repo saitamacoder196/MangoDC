@@ -2,8 +2,9 @@ from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
 import os
 import concurrent.futures
-
+from django.http import JsonResponse
 from MangoDC.helper import process_with_user_options
+from codev4.main import RunTime
 # View cho trang Home
 def home(request):
     return render(request, 'home.html')
@@ -16,6 +17,23 @@ def experiment(request):
 def demo(request):
     return render(request, 'demo.html')
 
+# View cho trang Demo
+def demo2(request):
+    return render(request, 'demo2.html')
+
+def capture(request):
+    project = RunTime()
+    project.run()
+    
+    # Trả về một JSON response với dữ liệu nếu cần
+    return JsonResponse({'message': 'Capture successful!'})
+
+def turnoff(request):
+    # Logic để tắt chương trình capture
+    project = RunTime()
+    project.stop()  # Giả sử có phương thức stop() để tắt
+
+    return JsonResponse({'message': 'Capture turned off!'})
 
 def sort_image_files(image_files):
     # Define a custom sorting key to arrange by Left, Center, Right, and index

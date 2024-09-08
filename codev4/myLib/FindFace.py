@@ -60,7 +60,7 @@ class find:
             contour = max(contours, key=cv2.contourArea) #Tìm đường viền lớn nhất của ảnh nhị phân
             cv2.drawContours(blank, [contour], 0, 255, -1) #vẽ đường viền lên ảnh đen để tạo thành ảnh nhị phân mặt xoài
             blank = cv2.erode(blank, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))) #bào mòn ảnh nhị phân
-            cv2.imshow('thresh', blank)
+            # cv2.imshow('thresh', blank)
             contours, _ = cv2.findContours(blank, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE) #Tìm lại đường viền ảnh nhị phân vừa bào mòn
             ellipse = cv2.fitEllipse(contours[0]) #Tìm hình ellipse bao quanh quả xoài
             centerE = (int(ellipse[0][0]), int(ellipse[0][1])) #Tâm hình ellipse
@@ -79,7 +79,8 @@ class find:
                 return True, show
             else:
                 return False, show
-        except:
+        except Exception as e:
+        
             return False, show
     
     """ Kiểm tra góc xoay quả xoài, dựa vào các góc xoay để đưa ra các lệnh tương ứng"""
@@ -166,7 +167,7 @@ if __name__ == "__main__":
             save, stopcheck, keep = test.check_Status()
             # print(save, keep)
 
-        cv2.imshow('Window', show)
+        # cv2.imshow('Window', show)
         key = cv2.waitKey(1)
         if key == ord('q'):
             print("Stop acquiring camera")

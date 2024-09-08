@@ -64,7 +64,6 @@ class control:
             self.slowRotate()
         if job == "stoprotate":
             self.stopRotate()
-        ""
         if job == "onxylanh1":
             self.onXylanh1()
         if job == "onxylanh2":

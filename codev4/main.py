@@ -4,19 +4,19 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 import cv2
 
-from myLib.BaslerCamera import camera
-from myLib import Module as mod
-from myLib.FindFace import find
-from myLib.Control import control
+from codev4.myLib.BaslerCamera import camera
+from codev4.myLib import Module as mod
+from codev4.myLib.FindFace import find
+from codev4.myLib.Control import control
 
 from numpy import random
 from time import sleep
 
-from myLib.ImageProcess import Processing
+from codev4.myLib.ImageProcess import Processing
 
 class RunTime:
     def __init__(self):
-        self.control = control('COM3', 115200)
+        self.control = control('COM7', 115200)
         print("Wait to connect to Arduino !")
         print("....")
         # self.control.recv_data()
@@ -45,7 +45,8 @@ class RunTime:
         self.center = []
         self.left = []
         self.right = []
-        
+        self.TERMINATE = False
+
     def CaptureImage(self):
         "Ethernet"
         frame_Left = self.cam.creatframe(1)
@@ -56,8 +57,8 @@ class RunTime:
         self.center.append(frame_Center)
         self.left.append(frame_Left) 
         #self.right.append(frame_Right)
-        cv2.imshow("Left", mod.Scale(frame_Left, 0.3))
-        cv2.imshow("Center", mod.Scale(frame_Center, 0.3))
+        # cv2.imshow("Left", mod.Scale(frame_Left, 0.3))
+        # cv2.imshow("Center", mod.Scale(frame_Center, 0.3))
 
     def getFace(self):
         while self.cam.cameras.IsGrabbing:
@@ -114,14 +115,18 @@ class RunTime:
                 self.findMango.resetStatus()
                 self.END = False
 
-            cv2.imshow('Find Mango Window', show)
-            key = cv2.waitKey(1)
-
-            if key == ord('q'):
-                self.STOP = True
-                print("Stop acquiring camera")
-                cv2.destroyAllWindows()
+            if self.TERMINATE:
+                print('Program stopped!')
                 break
+
+            # cv2.imshow('Find Mango Window', show)
+            # key = cv2.waitKey(1)
+
+            # if key == ord('q'):
+            #     self.STOP = True
+            #     print("Stop acquiring camera")
+            #     cv2.destroyAllWindows()
+                # break
     
     def processingImage(self):
         Data = Processing(Center_Images=self.center, Scale_Center=0.5*0.56, 
@@ -136,7 +141,7 @@ class RunTime:
         Center_RS_0 = mod.stackImages([Data.Faces_Crop_Left[2],Data.Faces_Crop_Center[0],Data.Faces_Crop_Center[2]], 0)
         Center_RS_1 = mod.stackImages([Data.Face_Crop_Right,Data.Faces_Crop_Center[1],Data.Faces_Crop_Center[3]], 0)
         Center_RS = mod.stackImages([Center_RS_0, Center_RS_1], 1)
-        cv2.imshow("RS", Center_RS)
+        # cv2.imshow("RS", Center_RS)
         Area = sum(Data.AllArea)
         print(Area)
         if Area>200:
@@ -158,7 +163,15 @@ class RunTime:
         self.getFace()
         thread.join()
 
-
+    def stop(self):
+        print("Stopping the process...")
+        self.TERMINATE = True  # Đặt cờ TERMINATE thành True để dừng quá trình
+        
+    def terminate(self):
+        """Hàm để gọi khi cần dừng tất cả các tiến trình"""
+        self.TERMINATE = True
+        self.cam.CloseCam()  # Đóng camera khi dừng chương trình
+        print("Process terminated.")
 '''Đoạn chương trình gọi hàm'''
 if __name__ == "__main__":
     project = RunTime()

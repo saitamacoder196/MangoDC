@@ -10,6 +10,9 @@ urlpatterns = [
     path('image-processing/', views.image_processing, name='image_processing'),
     path('experiment/', views.experiment, name='experiment'),
     path('demo/', views.demo, name='demo'),
+    path('demo2/', views.demo2, name='demo2'),
+    path('capture/', views.capture, name='capture'),
+    path('turnoff/', views.turnoff, name='turnoff'),
 ]
 
 if settings.DEBUG:

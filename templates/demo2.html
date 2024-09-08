@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Image Upload and Disease Detection{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="center-button">
+        <button id="capture-btn" type="button" class="btn">Capture</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'js/demo2.js' %}"></script>
+{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/demo2.css' %}">
+{% endblock %}
