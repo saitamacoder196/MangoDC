@@ -1,0 +1,2 @@
+Center/Left = 1.72
+Right/Left = 1.46666666666
