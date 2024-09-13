@@ -54,3 +54,14 @@
     padding: 15px;
     background-color: #fff;
 }
+
+.image-square {
+    border: 1px solid #ddd;
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+}
+.image-square img {
+    width: 100%;
+    height: auto;
+}

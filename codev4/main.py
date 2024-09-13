@@ -16,7 +16,7 @@ from codev4.myLib.ImageProcess import Processing
 
 class RunTime:
     def __init__(self):
-        self.control = control('COM7', 115200)
+        self.control = control('COM3', 115200)
         print("Wait to connect to Arduino !")
         print("....")
         # self.control.recv_data()
