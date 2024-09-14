@@ -3,8 +3,13 @@ from django.core.files.storage import FileSystemStorage
 import os
 import concurrent.futures
 from django.http import JsonResponse
+from MangoDC import settings
 from MangoDC.helper import process_with_user_options
-from codev4.main import RunTime
+from codev4.socket import WebSocketServer
+# from codev4.main import RunTime
+# project = RunTime()
+server = WebSocketServer()
+
 # View cho trang Home
 def home(request):
     return render(request, 'home.html')
@@ -21,19 +26,19 @@ def demo(request):
 def demo2(request):
     return render(request, 'demo2.html')
 
-def capture(request):
-    project = RunTime()
-    project.run()
-    
-    # Trả về một JSON response với dữ liệu nếu cần
-    return JsonResponse({'message': 'Capture successful!'})
+def capture(request): 
+    if not server.running:  # Chỉ khởi động nếu nó chưa đang chạy
+        server.start()
+        return JsonResponse({'message': 'WebSocket server started successfully!'})
+    else:
+        return JsonResponse({'message': 'WebSocket server is already running!'})
 
 def turnoff(request):
-    # Logic để tắt chương trình capture
-    project = RunTime()
-    project.stop()  # Giả sử có phương thức stop() để tắt
-
-    return JsonResponse({'message': 'Capture turned off!'})
+    if server.running:  # Chỉ dừng nếu nó đang chạy
+        server.stop()
+        return JsonResponse({'message': 'WebSocket server stopped successfully!'})
+    else:
+        return JsonResponse({'message': 'WebSocket server is not running!'})
 
 def sort_image_files(image_files):
     # Define a custom sorting key to arrange by Left, Center, Right, and index
