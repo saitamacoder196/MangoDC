@@ -5,10 +5,9 @@ import concurrent.futures
 from django.http import JsonResponse
 from MangoDC import settings
 from MangoDC.helper import process_with_user_options
-from codev4.socket import WebSocketServer
-# from codev4.main import RunTime
-# project = RunTime()
-server = WebSocketServer()
+from codev4.main import RunTime
+
+server = RunTime()
 
 # View cho trang Home
 def home(request):

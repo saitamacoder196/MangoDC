@@ -1,0 +1,45 @@
+# config.py
+
+# Camera settings
+CAMERA_PORT_LEFT = 1
+CAMERA_PORT_CENTER = 0
+
+# Arduino control settings
+ARDUINO_PORT = 'COM3'
+ARDUINO_BAUDRATE = 115200
+
+# Mango rotation settings
+ROTATION_ANGLE = 90
+
+# Image processing settings
+SCALE_CENTER = 0.5 * 0.56
+SCALE_LEFT = 0.5 * 0.69
+SCALE_RIGHT = 0.5
+OFFSET = 10
+NUM_SLICE_CENTER = 12
+NUM_SLICE_HEAD = 12
+NUM_SLICE_TAIL = 17
+BOX_CENTER = [21, 15]
+BOX_LEFT_RIGHT = [13, 11]
+
+# Constants for area calculation
+FUNC_CONST_AREA_CENTER = [6.988941860465115e-06, 0.007519668639534884]
+FUNC_CONST_AREA_LEFT = [1.9089044265593567e-05, -0.0028447316680080513]
+FUNC_CONST_AREA_RIGHT = [-1.996435199999999e-05, 0.058740052719999984]
+
+# Mango detection settings
+MANGO_DETECTION_LOWER = [0, 0, 150]
+MANGO_DETECTION_UPPER = [255, 255, 255]
+
+# Classification threshold
+CLASSIFICATION_THRESHOLD = 200
+
+# Command strings
+CMD_QUICK_ROTATE = "quickrotate"
+CMD_SLOW_ROTATE = "slowrotate"
+CMD_MOVE_TO_A = "move2A"
+CMD_MOVE_TO_B = "move2B"
+CMD_ON_XYLANH1 = "onxylanh1"
+
+# File saving settings
+IMAGE_FOLDER = "No Tape"

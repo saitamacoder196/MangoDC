@@ -3,23 +3,25 @@ import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import cv2
+import numpy as np
+from time import sleep
 
+from codev4.socket import WebSocketServer
 from codev4.myLib.BaslerCamera import camera
 from codev4.myLib import Module as mod
 from codev4.myLib.FindFace import find
 from codev4.myLib.Control import control
-
-from numpy import random
-from time import sleep
-
 from codev4.myLib.ImageProcess import Processing
 
-class RunTime:
+# Import các hằng số từ file config
+from codev4.config import *
+
+class RunTime(WebSocketServer):
     def __init__(self):
-        self.control = control('COM3', 115200)
+        super().__init__()
+        self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
         print("Wait to connect to Arduino !")
         print("....")
-        # self.control.recv_data()
         print("Connected")
         self.command = None
 
@@ -27,20 +29,18 @@ class RunTime:
         self.cam.OpenCam()
         self.image = []
 
-        '''Góc xoay: 10, 12, 15, 18, 20, 30, 36, 45, 60, 90'''
-        self.Angle = 90 #góc xoay khi chụp ảnh
-        self.NumFce = int(360/self.Angle) #Số thứ tự mặt xoài
-        self.findMango = find([0, 0, 150], [255, 255, 255], self.Angle)
+        self.Angle = ROTATION_ANGLE
+        self.NumFce = int(360/self.Angle)
+        self.findMango = find(MANGO_DETECTION_LOWER, MANGO_DETECTION_UPPER, self.Angle)
         
         self.speedRotate = True
         self.CAPTURE = False
         self.END = True
         self.STOP = False
 
-        "To Classify Mango"
-        self.test = ["move2A", "move2B"]
+        self.test = [CMD_MOVE_TO_A, CMD_MOVE_TO_B]
 
-        self.numMango = 1 #Số thứ tự trái xoài
+        self.numMango = 1
 
         self.center = []
         self.left = []
@@ -48,24 +48,15 @@ class RunTime:
         self.TERMINATE = False
 
     def CaptureImage(self):
-        "Ethernet"
-        frame_Left = self.cam.creatframe(1)
-        "USB"
-        frame_Center = self.cam.creatframe(0)
-        #frame_Right = self.cam.creatframe(0)
+        frame_Left = self.cam.creatframe(CAMERA_PORT_LEFT)
+        frame_Center = self.cam.creatframe(CAMERA_PORT_CENTER)
 
         self.center.append(frame_Center)
-        self.left.append(frame_Left) 
-        #self.right.append(frame_Right)
-        # cv2.imshow("Left", mod.Scale(frame_Left, 0.3))
-        # cv2.imshow("Center", mod.Scale(frame_Center, 0.3))
+        self.left.append(frame_Left)
 
     def getFace(self):
         while self.cam.cameras.IsGrabbing:
-            frame_Left = self.cam.creatframe(1)
-            #frame_Center = self.cam.creatframe(0)
-            #frame_Right = self.cam.creatframe(0)
-            
+            frame_Left = self.cam.creatframe(CAMERA_PORT_LEFT)
             frame = frame_Left.copy()
             frame = mod.Scale(frame, 0.3)
             
@@ -82,28 +73,22 @@ class RunTime:
                     
                 if stopcheck is False:
                     if speedRotate == 'Max':
-                        self.command = "quickrotate"
+                        self.command = CMD_QUICK_ROTATE
                     if speedRotate == 'Medium':
-                        self.command = "slowrotate"
-                    # if speedRotate == 'Stop':
-                    #     self.command = "onxylanh3"
+                        self.command = CMD_SLOW_ROTATE
                 else:
                     print("ID: ", self.numMango)
-                    '''Bỏ command khi cần lưu ảnh'''
                     current_date = datetime.now().strftime("%y.%m.%d")
-                    folder_name = os.path.join(current_date,"No Tape")
+                    folder_name = os.path.join(current_date, IMAGE_FOLDER)
                     if not os.path.exists(folder_name):
                         os.makedirs(folder_name)
                     for i in range(len(self.center)):
                         cv2.imwrite(f"{folder_name}/{self.numMango}-Center_{i+1}.jpg", self.center[i])
                     for i in range(len(self.left)):
                         cv2.imwrite(f"{folder_name}/{self.numMango}-Left_{i+1}.jpg", self.left[i])
-                    # for i in range((len(self.right))):
-                    #     cv2.imwrite(f"24.1.17/No Tape/{self.numMango}-Right_{i+1}.jpg", self.right[i])
-                    self.numMango+=1
-                    self.command = self.test[random.randint(2)] #Cho ngãu nhiên kết quả phân loại khi không tính diện tích khuyết điểm
-                    '''Bỏ command khi cần thực hiện xử lý ảnh trực tiếp'''
-                    # self.processingImage()
+                    
+                    self.numMango += 1
+                    self.command = np.random.choice(self.test)
                     self.END = True
                     sleep(2) 
 
@@ -111,7 +96,7 @@ class RunTime:
                 self.center = []
                 self.left = []
                 self.right = []
-                self.command = "onxylanh1"
+                self.command = CMD_ON_XYLANH1
                 self.findMango.resetStatus()
                 self.END = False
 
@@ -119,35 +104,26 @@ class RunTime:
                 print('Program stopped!')
                 break
 
-            # cv2.imshow('Find Mango Window', show)
-            # key = cv2.waitKey(1)
-
-            # if key == ord('q'):
-            #     self.STOP = True
-            #     print("Stop acquiring camera")
-            #     cv2.destroyAllWindows()
-                # break
-    
     def processingImage(self):
-        Data = Processing(Center_Images=self.center, Scale_Center=0.5*0.56, 
-                        Left_Images=self.left, Scale_Left=0.5*0.69,
-                        Right_Image=self.right, Scale_Right=0.5,
-                        Offset=10,NumSlice_Center=12, NumSlice_Head=12, NumSlice_Tail=17,
-                        Box_Center=[21,15], Box_LeftRight=[13,11],
-                        Func_ConstArea_Center=[6.988941860465115e-06 , 0.007519668639534884],
-                        Func_ConstArea_Left=[1.9089044265593567e-05 , -0.0028447316680080513], 
-                        Func_ConstArea_Right=[-1.996435199999999e-05 , 0.058740052719999984],
-                        Tape = False, CheckTape=[0,0,0])
+        Data = Processing(Center_Images=self.center, Scale_Center=SCALE_CENTER, 
+                        Left_Images=self.left, Scale_Left=SCALE_LEFT,
+                        Right_Image=self.right, Scale_Right=SCALE_RIGHT,
+                        Offset=OFFSET, NumSlice_Center=NUM_SLICE_CENTER, 
+                        NumSlice_Head=NUM_SLICE_HEAD, NumSlice_Tail=NUM_SLICE_TAIL,
+                        Box_Center=BOX_CENTER, Box_LeftRight=BOX_LEFT_RIGHT,
+                        Func_ConstArea_Center=FUNC_CONST_AREA_CENTER,
+                        Func_ConstArea_Left=FUNC_CONST_AREA_LEFT, 
+                        Func_ConstArea_Right=FUNC_CONST_AREA_RIGHT,
+                        Tape=False, CheckTape=[0,0,0])
         Center_RS_0 = mod.stackImages([Data.Faces_Crop_Left[2],Data.Faces_Crop_Center[0],Data.Faces_Crop_Center[2]], 0)
         Center_RS_1 = mod.stackImages([Data.Face_Crop_Right,Data.Faces_Crop_Center[1],Data.Faces_Crop_Center[3]], 0)
         Center_RS = mod.stackImages([Center_RS_0, Center_RS_1], 1)
-        # cv2.imshow("RS", Center_RS)
         Area = sum(Data.AllArea)
         print(Area)
-        if Area>200:
-            self.command = "move2A"
+        if Area > CLASSIFICATION_THRESHOLD:
+            self.command = CMD_MOVE_TO_A
         else:
-            self.command = "move2B"
+            self.command = CMD_MOVE_TO_B
 
     def sendData(self):
         while self.STOP is False:
@@ -157,25 +133,24 @@ class RunTime:
         with ThreadPoolExecutor(max_workers=1) as executor:
             executor.submit(self.sendData)
 
-    def run(self):
-        thread = threading.Thread(target=self.threadPool)
-        thread.start()
+    def start(self):
+        server_thread = threading.Thread(target=self.threadPool)
+        server_thread.start()
+        
+        websocket_thread = threading.Thread(target=self.start_server)
+        websocket_thread.start()
+
         self.getFace()
-        thread.join()
+
+        server_thread.join()
+        websocket_thread.join()
 
     def stop(self):
         print("Stopping the process...")
-        self.TERMINATE = True  # Đặt cờ TERMINATE thành True để dừng quá trình
-        
-    def terminate(self):
-        """Hàm để gọi khi cần dừng tất cả các tiến trình"""
         self.TERMINATE = True
-        self.cam.CloseCam()  # Đóng camera khi dừng chương trình
-        print("Process terminated.")
-'''Đoạn chương trình gọi hàm'''
+        self.cam.CloseCam()
+        print("Process stopped.")
+
 if __name__ == "__main__":
     project = RunTime()
-    project.run()
-
-
-
+    project.start()

@@ -1,5 +1,8 @@
 django
-numpy
 opencv-python
 rembg
 websockets
+pypylon
+matplotlib
+scipy
+pyserial
