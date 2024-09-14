@@ -26,7 +26,28 @@ class WebSocketServer:
         # Send message to all connected clients
         if self.clients:
             print(f"Sending message: {message}")
-            await asyncio.wait([client.send(message) for client in self.clients])
+            disconnected_clients = set()
+            tasks = []
+            
+            for client in self.clients:
+                try:
+                    # Create a task to send message
+                    tasks.append(client.send(message))
+                except Exception as e:
+                    print(f"Error sending message to client: {e}")
+                    disconnected_clients.add(client)
+            
+            if tasks:
+                # Use asyncio.gather to await all tasks and catch any exceptions
+                try:
+                    await asyncio.gather(*tasks)
+                except Exception as e:
+                    print(f"Error during message send: {e}")
+
+            # Remove clients that were disconnected
+            for client in disconnected_clients:
+                await self.unregister(client)
+
 
     async def handle_client(self, websocket, path):
         # Handle client connection

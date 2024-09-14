@@ -21,14 +21,14 @@ from codev4.config import *
 class RunTime(WebSocketServer):
     def __init__(self):
         super().__init__()
-        # self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
+        self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
         print("Wait to connect to Arduino !")
         print("....")
         print("Connected")
         self.command = None
 
-        # self.cam = camera()
-        # self.cam.OpenCam()
+        self.cam = camera()
+        self.cam.OpenCam()
         self.image = []
 
         self.Angle = ROTATION_ANGLE
@@ -56,8 +56,8 @@ class RunTime(WebSocketServer):
         self.center.append(frame_Center)
         self.left.append(frame_Left)
 
-    def getFace(self):
-        while self.cam.cameras.IsGrabbing:
+    async def getFace(self):
+        while self.cam.cameras.IsGrabbing and self.running:
             frame_Left = self.cam.creatframe(CAMERA_PORT_LEFT)
             frame = frame_Left.copy()
             frame = mod.Scale(frame, 0.3)
@@ -110,8 +110,8 @@ class RunTime(WebSocketServer):
                     json_message = json.dumps(image_paths_message)
 
                     # Send the JSON string to clients via WebSocket
-                    asyncio.run(self.send_message(json_message))  # Use asyncio to send the message
-
+                    await self.send_message(json_message)  # Use asyncio to send the message
+                    await asyncio.sleep(5)
                     # Update state
                     self.numMango += 1
                     self.command = np.random.choice(self.test)
