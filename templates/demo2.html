@@ -18,21 +18,20 @@
         <div class="col-md-3" id="conclusion-tools" style="overflow-y: auto; height: 758.729px;">
             <h2>Kết quả, Đánh giá và Kết luận</h2>
             <div class="conclusion-content">
-                <p>Phát hiện vết bệnh tại ảnh <strong>xxx</strong> có vị trí tại (<strong>x</strong>,<strong>y</strong>), diện tích khoảng <strong>yyy</strong> nhận diện là bệnh <strong>zzz</strong>...</p>
-                <p>Phát hiện vết bệnh tại ảnh <strong>xxx2</strong> có vị trí tại (<strong>x2</strong>,<strong>y2</strong>), diện tích khoảng <strong>yyy2</strong>, nhận diện là bệnh <strong>zzz2</strong>...</p>
+                <div id="conclusion-detected-areas"></div>
                 <hr>
-                <p><strong>Tổng diện tích vùng bệnh phát hiện:</strong> 85375.50 pixels</p>
-                <p><strong>Diện tích các mặt quả xoài:</strong> 559946.50 pixels</p>
-                <p><strong>Tỷ lệ diện tích bệnh trên tổng diện tích quả xoài:</strong> 15.25%</p>
+                <p><strong>Tổng diện tích vùng bệnh phát hiện:</strong> <span id="total-disease-area">85375.50</span> pixels</p>
+                <p><strong>Diện tích các mặt quả xoài:</strong> <span id="total-mango-surface-area">559946.50</span> pixels</p>
+                <p><strong>Tỷ lệ diện tích bệnh trên tổng diện tích quả xoài:</strong> <span id="disease-area-percentage">15.25%</span>%</p>
                 <hr>
-                <p><strong>Kết luận:</strong> Reject: Xoài bệnh abc; Accept: Không phát hiện dấu hiệu bệnh.</p>
+                <p><strong>Kết luận:</strong> <span id="final-conclusion">Reject: Xoài bệnh abc; Accept: Không phát hiện dấu hiệu bệnh.</span></p>
             </div>
         </div>
 
         <!-- Bên phải: Hiển thị toàn bộ ảnh với tabs -->
         <div class="col-md-9" id="image-tabs-container">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4>Current Item: <span id="item-id">1-VL-DE</span></h4>
+                <h4>Current Item: <span id="current-item-id">1-VL-DE</span></h4>
                 <div class="d-flex">
                     <button id="prev-button" class="btn btn-secondary me-2">
                         <i class="icon-left-big"></i> Previous
@@ -55,19 +54,41 @@
 
             <!-- Tab content -->
             <div class="tab-content" id="imageTabsContent">
-                <!-- Tab for Processed Images -->
+                <!-- Tab for Prediction Images -->
                 <div class="tab-pane fade show active" id="processing" role="tabpanel" aria-labelledby="processing-tab">
-                    <h2>Processing</h2>
-                    <div id="processed-images" class="image-grid">
-                        <!-- Processed images will be displayed here -->
+                    <div id="prediction-images" class="image-grid">
+                        <!-- Prediction images grid -->
+                        <div id="pred-Left_1" class="image-square"></div>
+                        <div id="pred-Left_2" class="image-square"></div>
+                        <div id="pred-Left_3" class="image-square"></div>
+                        <div id="pred-Left_4" class="image-square"></div>
+                        <div id="pred-Center_1" class="image-square"></div>
+                        <div id="pred-Center_2" class="image-square"></div>
+                        <div id="pred-Center_3" class="image-square"></div>
+                        <div id="pred-Center_4" class="image-square"></div>
+                        <div id="pred-Right_1" class="image-square"></div>
+                        <div id="pred-Right_2" class="image-square"></div>
+                        <div id="pred-Right_3" class="image-square"></div>
+                        <div id="pred-Right_4" class="image-square"></div>
                     </div>
                 </div>
 
                 <!-- Tab for Original Images -->
                 <div class="tab-pane fade" id="original" role="tabpanel" aria-labelledby="original-tab">
-                    <h2>Original</h2>
                     <div id="original-images" class="image-grid">
-                        <!-- Original images will be displayed here -->
+                        <!-- Original images grid -->
+                        <div id="orig-Left_1" class="image-square"></div>
+                        <div id="orig-Left_2" class="image-square"></div>
+                        <div id="orig-Left_3" class="image-square"></div>
+                        <div id="orig-Left_4" class="image-square"></div>
+                        <div id="orig-Center_1" class="image-square"></div>
+                        <div id="orig-Center_2" class="image-square"></div>
+                        <div id="orig-Center_3" class="image-square"></div>
+                        <div id="orig-Center_4" class="image-square"></div>
+                        <div id="orig-Right_1" class="image-square"></div>
+                        <div id="orig-Right_2" class="image-square"></div>
+                        <div id="orig-Right_3" class="image-square"></div>
+                        <div id="orig-Right_4" class="image-square"></div>
                     </div>
                 </div>
             </div>

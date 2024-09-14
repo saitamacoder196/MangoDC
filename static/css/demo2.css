@@ -102,3 +102,61 @@
     height: 100%;
     object-fit: cover;
 }
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.captured-image {
+    max-width: 200px;
+    margin: 10px;
+}
+
+/* Image Square Styling */
+.image-square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding-bottom: 100%; /* Make it a square */
+    background-color: #f9f9f9;
+    border: 2px solid #ddd;
+    color: #aaa; /* Lighter black for placeholder-like text */
+    font-weight: bold;
+    font-size: 14px;
+    text-align: center;
+    position: relative;
+}
+
+.image-square::before {
+    content: attr(id); /* Show the ID as placeholder */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #aaa; /* Placeholder-like color */
+    font-size: 14px;
+}

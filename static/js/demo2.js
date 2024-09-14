@@ -27,14 +27,12 @@ $(document).ready(function() {
                 let messageData = JSON.parse(event.data);
                 console.log("Message from server:", messageData);
 
-                // Kiểm tra xem tin nhắn có chứa các path ảnh không
-                if (messageData.left_images && messageData.center_images) {
-                    // Reset lại danh sách ảnh
-                    $('#image-container').empty();
-
-                    // Thêm các ảnh mới vào container
-                    appendImages(messageData.left_images, "Left");
-                    appendImages(messageData.center_images, "Center");
+                // Kiểm tra xem tin nhắn có chứa các path ảnh và dữ liệu khác
+                if (messageData.current_item && messageData.prediction_images && messageData.original_images && messageData.conclusion) {
+                    updateCurrentItem(messageData.current_item);
+                    updatePredictionImages(messageData.prediction_images);
+                    updateOriginalImages(messageData.original_images);
+                    updateConclusion(messageData.conclusion);
                 }
             } catch (e) {
                 console.error("Error parsing message:", e);
@@ -67,7 +65,8 @@ $(document).ready(function() {
     function handleWebSocketFailure() {
         if (isCaptureRunning) {
             // Đặt lại trạng thái nút
-            $("#capture-btn").text("Capture");
+            $("#capture-btn").text(" Start").prepend('<i class="icon-play"></i>');
+            $("#capture-btn").removeClass("btn-danger").addClass("btn-success");
             isCaptureRunning = false;
 
             // Hiển thị thông báo lỗi
@@ -75,18 +74,37 @@ $(document).ready(function() {
         }
     }
 
-    // Hàm thêm ảnh vào container
-    function appendImages(imagePaths, label) {
-        imagePaths.forEach(function(path) {
-            // Tạo thẻ img mới
-            let img = $('<img>', {
-                src: path,
-                alt: label + " Image",
-                class: 'captured-image'
-            });
-            // Thêm thẻ img vào container
-            $('#image-container').append(img);
+    // Hàm cập nhật item hiện tại
+    function updateCurrentItem(currentItem) {
+        $("#current-item-id").text(currentItem.id);
+    }
+
+    // Hàm cập nhật các ảnh prediction
+    function updatePredictionImages(predictionImages) {
+        for (const [key, value] of Object.entries(predictionImages)) {
+            $(`#pred-${key}`).css('background-image', `url(${value})`);
+        }
+    }
+
+    // Hàm cập nhật các ảnh original
+    function updateOriginalImages(originalImages) {
+        for (const [key, value] of Object.entries(originalImages)) {
+            $(`#orig-${key}`).css('background-image', `url(${value})`);
+        }
+    }
+
+    // Hàm cập nhật kết luận
+    function updateConclusion(conclusionData) {
+        let detectedAreasHTML = '';
+        conclusionData.detected_areas.forEach(area => {
+            detectedAreasHTML += `<p>Phát hiện vết bệnh tại ảnh <strong>${area.image}</strong> có vị trí tại (<strong>${area.position.x}</strong>,<strong>${area.position.y}</strong>), diện tích khoảng <strong>${area.area_size}</strong>, nhận diện là bệnh <strong>${area.disease}</strong>.</p>`;
         });
+        $("#conclusion-detected-areas").html(detectedAreasHTML);
+
+        $("#total-disease-area").text(conclusionData.total_disease_area);
+        $("#total-mango-surface-area").text(conclusionData.total_mango_surface_area);
+        $("#disease-area-percentage").text(conclusionData.disease_area_percentage);
+        $("#final-conclusion").text(conclusionData.conclusion);
     }
 
     $("#capture-btn").on("click", function() {
@@ -97,9 +115,9 @@ $(document).ready(function() {
                 type: "GET",
                 success: function(response) {
                     console.log(response.message);
-                    // Đổi tên nút sang "Turn off"
-                    $("#capture-btn").text("Stop");
-                    $("#capture-icon").attr("class","icon-stop");
+                    // Đổi tên nút sang "Stop"
+                    $("#capture-btn").html('<i class="icon-stop"></i> Stop');
+                    $("#capture-btn").removeClass("btn-success").addClass("btn-danger");
                     isCaptureRunning = true;
 
                     // Kết nối tới WebSocket sau khi API capture thành công
@@ -117,8 +135,9 @@ $(document).ready(function() {
                 type: "GET",
                 success: function(response) {
                     console.log(response.message);
-                    // Đổi tên nút lại thành "Capture"
-                    $("#capture-btn").text("Start");
+                    // Đổi tên nút lại thành "Start"
+                    $("#capture-btn").html('<i class="icon-play"></i> Start');
+                    $("#capture-btn").removeClass("btn-danger").addClass("btn-success");
                     isCaptureRunning = false;
 
                     // Ngắt kết nối WebSocket sau khi API turnoff thành công
