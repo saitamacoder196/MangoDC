@@ -104,3 +104,8 @@ h3 {
     justify-content: center;
     align-items: center;
 }
+
+.captured-image {
+    max-width: 300px;
+    margin: 10px;
+}

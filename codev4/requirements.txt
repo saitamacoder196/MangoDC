@@ -1,6 +1,0 @@
-numpy
-opencv-python
-pypylon
-matplotlib
-scipy
-pyserial

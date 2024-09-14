@@ -1,3 +1,4 @@
+import threading
 from django.shortcuts import render
 from django.core.files.storage import FileSystemStorage
 import os
@@ -26,16 +27,16 @@ def demo2(request):
     return render(request, 'demo2.html')
 
 def capture(request): 
-    if not server.running:  # Chỉ khởi động nếu nó chưa đang chạy
-        server.start()
-        return JsonResponse({'message': 'WebSocket server started successfully!'})
+    if not server.running:  # Only start if it's not already running
+        threading.Thread(target=server.start).start()  # Run server.start() in a new thread
+        return JsonResponse({'message': 'WebSocket server is starting in the background!'})
     else:
         return JsonResponse({'message': 'WebSocket server is already running!'})
 
 def turnoff(request):
-    if server.running:  # Chỉ dừng nếu nó đang chạy
-        server.stop()
-        return JsonResponse({'message': 'WebSocket server stopped successfully!'})
+    if server.running:  # Only stop if it's running
+        threading.Thread(target=server.stop).start()  # Run server.stop() in a new thread
+        return JsonResponse({'message': 'WebSocket server is stopping in the background!'})
     else:
         return JsonResponse({'message': 'WebSocket server is not running!'})
 

@@ -26,6 +26,16 @@ $(document).ready(function() {
                 // Parse tin nhắn từ server để đảm bảo dữ liệu đúng
                 let messageData = JSON.parse(event.data);
                 console.log("Message from server:", messageData);
+
+                // Kiểm tra xem tin nhắn có chứa các path ảnh không
+                if (messageData.left_images && messageData.center_images) {
+                    // Reset lại danh sách ảnh
+                    $('#image-container').empty();
+
+                    // Thêm các ảnh mới vào container
+                    appendImages(messageData.left_images, "Left");
+                    appendImages(messageData.center_images, "Center");
+                }
             } catch (e) {
                 console.error("Error parsing message:", e);
             }
@@ -63,6 +73,20 @@ $(document).ready(function() {
             // Hiển thị thông báo lỗi
             alert("WebSocket connection failed. Please try capturing again.");
         }
+    }
+
+    // Hàm thêm ảnh vào container
+    function appendImages(imagePaths, label) {
+        imagePaths.forEach(function(path) {
+            // Tạo thẻ img mới
+            let img = $('<img>', {
+                src: path,
+                alt: label + " Image",
+                class: 'captured-image'
+            });
+            // Thêm thẻ img vào container
+            $('#image-container').append(img);
+        });
     }
 
     $("#capture-btn").on("click", function() {

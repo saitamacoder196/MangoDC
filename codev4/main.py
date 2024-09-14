@@ -1,4 +1,6 @@
+import asyncio
 from datetime import datetime
+import json
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
@@ -19,14 +21,14 @@ from codev4.config import *
 class RunTime(WebSocketServer):
     def __init__(self):
         super().__init__()
-        self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
+        # self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
         print("Wait to connect to Arduino !")
         print("....")
         print("Connected")
         self.command = None
 
-        self.cam = camera()
-        self.cam.OpenCam()
+        # self.cam = camera()
+        # self.cam.OpenCam()
         self.image = []
 
         self.Angle = ROTATION_ANGLE
@@ -59,7 +61,7 @@ class RunTime(WebSocketServer):
             frame_Left = self.cam.creatframe(CAMERA_PORT_LEFT)
             frame = frame_Left.copy()
             frame = mod.Scale(frame, 0.3)
-            
+
             mango, show = self.findMango.find_Mango(frame)
 
             if mango:
@@ -70,7 +72,7 @@ class RunTime(WebSocketServer):
                     self.CaptureImage()
                 else:
                     self.CAPTURE = False
-                    
+
                 if stopcheck is False:
                     if speedRotate == 'Max':
                         self.command = CMD_QUICK_ROTATE
@@ -82,15 +84,39 @@ class RunTime(WebSocketServer):
                     folder_name = os.path.join(current_date, IMAGE_FOLDER)
                     if not os.path.exists(folder_name):
                         os.makedirs(folder_name)
+
+                    left_images_paths = []
+                    center_images_paths = []
+
+                    # Save images and collect the paths
                     for i in range(len(self.center)):
-                        cv2.imwrite(f"{folder_name}/{self.numMango}-Center_{i+1}.jpg", self.center[i])
+                        center_path = f"{folder_name}/{self.numMango}-Center_{i+1}.jpg"
+                        cv2.imwrite(center_path, self.center[i])
+                        center_images_paths.append(center_path)
+
                     for i in range(len(self.left)):
-                        cv2.imwrite(f"{folder_name}/{self.numMango}-Left_{i+1}.jpg", self.left[i])
-                    
+                        left_path = f"{folder_name}/{self.numMango}-Left_{i+1}.jpg"
+                        cv2.imwrite(left_path, self.left[i])
+                        left_images_paths.append(left_path)
+
+                    # Create a JSON string with the image paths
+                    image_paths_message = {
+                        'numMango': self.numMango,
+                        'center_images': center_images_paths,
+                        'left_images': left_images_paths
+                    }
+
+                    # Convert the dictionary to a JSON string
+                    json_message = json.dumps(image_paths_message)
+
+                    # Send the JSON string to clients via WebSocket
+                    asyncio.run(self.send_message(json_message))  # Use asyncio to send the message
+
+                    # Update state
                     self.numMango += 1
                     self.command = np.random.choice(self.test)
                     self.END = True
-                    sleep(2) 
+                    sleep(2)
 
             if self.END is True:
                 self.center = []
@@ -133,14 +159,22 @@ class RunTime(WebSocketServer):
         with ThreadPoolExecutor(max_workers=1) as executor:
             executor.submit(self.sendData)
 
+    # async def periodic_send(self):
+    #     # Periodically send messages to clients
+    #     while self.running:
+    #         message = json.dumps({"message": "Periodic message from server 2"})
+    #         await self.send_message(message)
+    #         await asyncio.sleep(5)  # Wait 5 seconds before sending the next message
+
+             
     def start(self):
         server_thread = threading.Thread(target=self.threadPool)
         server_thread.start()
-        
+        self.add_task(self.getFace)
         websocket_thread = threading.Thread(target=self.start_server)
         websocket_thread.start()
 
-        self.getFace()
+        # self.getFace()
 
         server_thread.join()
         websocket_thread.join()
@@ -148,7 +182,7 @@ class RunTime(WebSocketServer):
     def stop(self):
         print("Stopping the process...")
         self.TERMINATE = True
-        self.cam.CloseCam()
+        # self.cam.CloseCam()
         print("Process stopped.")
 
 if __name__ == "__main__":
