@@ -29,6 +29,18 @@
       "css": "right-big",
       "code": 59394,
       "src": "fontawesome"
+    },
+    {
+      "uid": "ce06b5805120d0c2f8d60cd3f1a4fdb5",
+      "css": "play",
+      "code": 59395,
+      "src": "fontawesome"
+    },
+    {
+      "uid": "b624a1e512819d410ddbee84e6918b9d",
+      "css": "stop",
+      "code": 59396,
+      "src": "fontawesome"
     }
   ]
 }

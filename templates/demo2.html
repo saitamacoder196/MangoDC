@@ -4,12 +4,75 @@
 
 {% block content %}
 <div class="container">
-    <div class="center-button">
-        <button id="capture-btn" type="button" class="btn">Capture</button>
+    <div class="row">
+        <!-- Bên phải: Button "Start" aligned to the right at the top -->
+        <div class="col-md-12 d-flex justify-content-end align-items-center mb-4">
+            <button id="capture-btn" type="button" class="btn btn-success">
+                <i id="capture-icon" class="icon-play"></i> Start
+            </button>
+        </div>
     </div>
 
-    <!-- Container to display the images -->
-    <div id="image-container" class="image-display"></div>
+    <div class="row">
+        <!-- Bên trái: Kết quả, Đánh giá và Kết luận -->
+        <div class="col-md-3" id="conclusion-tools" style="overflow-y: auto; height: 758.729px;">
+            <h2>Kết quả, Đánh giá và Kết luận</h2>
+            <div class="conclusion-content">
+                <p>Phát hiện vết bệnh tại ảnh <strong>xxx</strong> có vị trí tại (<strong>x</strong>,<strong>y</strong>), diện tích khoảng <strong>yyy</strong> nhận diện là bệnh <strong>zzz</strong>...</p>
+                <p>Phát hiện vết bệnh tại ảnh <strong>xxx2</strong> có vị trí tại (<strong>x2</strong>,<strong>y2</strong>), diện tích khoảng <strong>yyy2</strong>, nhận diện là bệnh <strong>zzz2</strong>...</p>
+                <hr>
+                <p><strong>Tổng diện tích vùng bệnh phát hiện:</strong> 85375.50 pixels</p>
+                <p><strong>Diện tích các mặt quả xoài:</strong> 559946.50 pixels</p>
+                <p><strong>Tỷ lệ diện tích bệnh trên tổng diện tích quả xoài:</strong> 15.25%</p>
+                <hr>
+                <p><strong>Kết luận:</strong> Reject: Xoài bệnh abc; Accept: Không phát hiện dấu hiệu bệnh.</p>
+            </div>
+        </div>
+
+        <!-- Bên phải: Hiển thị toàn bộ ảnh với tabs -->
+        <div class="col-md-9" id="image-tabs-container">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Current Item: <span id="item-id">1-VL-DE</span></h4>
+                <div class="d-flex">
+                    <button id="prev-button" class="btn btn-secondary me-2">
+                        <i class="icon-left-big"></i> Previous
+                    </button>
+                    <button id="next-button" class="btn btn-secondary">
+                        <i class="icon-right-big"></i> Next
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabs for Processing and Original images -->
+            <ul class="nav nav-tabs" id="imageTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="processing-tab" data-bs-toggle="tab" href="#processing" role="tab" aria-controls="processing" aria-selected="true">Processing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="original-tab" data-bs-toggle="tab" href="#original" role="tab" aria-controls="original" aria-selected="false">Original</a>
+                </li>
+            </ul>
+
+            <!-- Tab content -->
+            <div class="tab-content" id="imageTabsContent">
+                <!-- Tab for Processed Images -->
+                <div class="tab-pane fade show active" id="processing" role="tabpanel" aria-labelledby="processing-tab">
+                    <h2>Processing</h2>
+                    <div id="processed-images" class="image-grid">
+                        <!-- Processed images will be displayed here -->
+                    </div>
+                </div>
+
+                <!-- Tab for Original Images -->
+                <div class="tab-pane fade" id="original" role="tabpanel" aria-labelledby="original-tab">
+                    <h2>Original</h2>
+                    <div id="original-images" class="image-grid">
+                        <!-- Original images will be displayed here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
 

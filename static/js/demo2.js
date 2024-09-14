@@ -98,7 +98,8 @@ $(document).ready(function() {
                 success: function(response) {
                     console.log(response.message);
                     // Đổi tên nút sang "Turn off"
-                    $("#capture-btn").text("Turn off");
+                    $("#capture-btn").text("Stop");
+                    $("#capture-icon").attr("class","icon-stop");
                     isCaptureRunning = true;
 
                     // Kết nối tới WebSocket sau khi API capture thành công
@@ -117,7 +118,7 @@ $(document).ready(function() {
                 success: function(response) {
                     console.log(response.message);
                     // Đổi tên nút lại thành "Capture"
-                    $("#capture-btn").text("Capture");
+                    $("#capture-btn").text("Start");
                     isCaptureRunning = false;
 
                     // Ngắt kết nối WebSocket sau khi API turnoff thành công
