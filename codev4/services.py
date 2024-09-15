@@ -1,5 +1,6 @@
 from .database import Session
 from .models import MangoItem, Image, DetectedArea, Conclusion
+from sqlalchemy import func
 
 def save_mango_data(payload_results):
     session = Session()
@@ -55,3 +56,20 @@ def save_mango_data(payload_results):
         session.close()  # Đóng session
 
     return mango_item 
+
+def get_next_mango_id():
+    session = Session()
+    try:
+        # Truy vấn mango_id lớn nhất hiện có
+        max_mango_id = session.query(func.max(MangoItem.id)).scalar()
+
+        # Nếu bảng rỗng, trả về giá trị khởi tạo (ví dụ: 1)
+        if max_mango_id is None:
+            return 1
+        else:
+            return max_mango_id + 1
+    except Exception as e:
+        print(f"Error while fetching next mango_id: {e}")
+        return None
+    finally:
+        session.close()
