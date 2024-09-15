@@ -219,6 +219,17 @@ $(document).ready(function () {
         $("#final-conclusion").text(conclusionData.conclusion || 'No conclusion available.');
     }
 
+    // Hàm helper để lấy base URL
+    function getBaseUrl() {
+        return window.location.protocol + "//" + window.location.host;
+    }
+
+    // Hàm helper để chuẩn hóa đường dẫn
+    function normalizeImagePath(path) {
+        // Thay thế dấu gạch chéo ngược bằng dấu gạch chéo thường
+        return path.replace(/\\/g, '/');
+    }
+
     // Hàm cập nhật các ảnh prediction
     function updatePredictionImages(predictionImages) {
         if (!predictionImages) {
@@ -226,10 +237,14 @@ $(document).ready(function () {
             return;
         }
 
+        const baseUrl = getBaseUrl();
+
         for (const [key, value] of Object.entries(predictionImages)) {
             const imageElement = $(`#pred-${key}`);
             if (imageElement.length) {
-                imageElement.css('background-image', `url(${value})`);
+                const normalizedPath = normalizeImagePath(value);
+                const fullImageUrl = `${baseUrl}/${normalizedPath}`;
+                imageElement.css('background-image', `url('${fullImageUrl}')`);
             } else {
                 console.warn(`Element for prediction image ${key} not found`);
             }
@@ -243,10 +258,14 @@ $(document).ready(function () {
             return;
         }
 
+        const baseUrl = getBaseUrl();
+
         for (const [key, value] of Object.entries(originalImages)) {
             const imageElement = $(`#orig-${key}`);
             if (imageElement.length) {
-                imageElement.css('background-image', `url(${value})`);
+                const normalizedPath = normalizeImagePath(value);
+                const fullImageUrl = `${baseUrl}/${normalizedPath}`;
+                imageElement.css('background-image', `url('${fullImageUrl}')`);
             } else {
                 console.warn(`Element for original image ${key} not found`);
             }
