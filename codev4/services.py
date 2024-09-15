@@ -61,7 +61,7 @@ def get_next_mango_id():
     session = Session()
     try:
         # Truy vấn mango_id lớn nhất hiện có
-        max_mango_id = session.query(func.max(MangoItem.id)).scalar()
+        max_mango_id = session.query(func.max(MangoItem.mango_id)).scalar()
 
         # Nếu bảng rỗng, trả về giá trị khởi tạo (ví dụ: 1)
         if max_mango_id is None:
