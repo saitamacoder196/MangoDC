@@ -186,6 +186,32 @@ $(document).ready(function () {
         });
     }
 
+    function updateCurrentItem(currentItem) {
+        if (!currentItem) {
+            console.error("No current item data provided");
+            return;
+        }
+    
+        // Cập nhật ID của mango item
+        $("#current-item-id").text(currentItem.mango_id);
+    
+        // Cập nhật folder path nếu có
+        if (currentItem.folder_path) {
+            $("#folder-path").text(currentItem.folder_path);
+        }
+    
+        // Cập nhật các thông tin khác nếu cần
+        // Ví dụ: nếu có thêm thông tin như ngày tạo, kích thước, etc.
+        if (currentItem.created_at) {
+            $("#created-at").text(currentItem.created_at);
+        }
+    
+        if (currentItem.size) {
+            $("#mango-size").text(currentItem.size);
+        }
+    
+        console.log("Current item updated:", currentItem);
+    }    
 
     // Cập nhật hàm disconnectWebSocket
     function disconnectWebSocket() {
@@ -247,7 +273,7 @@ $(document).ready(function () {
             disconnectWebSocket();
         }
     });
-    
+
     // Load folder paths khi trang được tải
     loadFolderPaths();
 });
