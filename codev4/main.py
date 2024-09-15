@@ -19,11 +19,12 @@ import os
 import random
 import tensorflow as tf
 import threading
+from django.db import transaction
+from mango_analysis.utils import save_mango_data
 
 # Load model (chỉ load một lần khi chương trình bắt đầu)
-unet_model = tf.keras.models.load_model("codev4/rmbnet.keras")
-mangoddsnet_model = tf.keras.models.load_model("codev4/mangoddsnet.keras")
-
+unet_model = tf.keras.models.load_model("models/rmbnet.keras")
+mangoddsnet_model = tf.keras.models.load_model("models/mangoddsnet.keras")
 
 def remove_background_from_image(image, model, img_size=(256, 256)):
     if image is None:
@@ -277,14 +278,14 @@ def convert_and_analyze_mango_data(input_data: Dict[str, Any],
 class RunTime(WebSocketServer):
     def __init__(self):
         super().__init__()
-        self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
+        # self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
         print("Wait to connect to Arduino !")
         print("....")
         print("Connected")
         self.command = None
 
-        self.cam = camera()
-        self.cam.OpenCam()
+        # self.cam = camera()
+        # self.cam.OpenCam()
         self.image = []
 
         self.Angle = ROTATION_ANGLE
@@ -376,7 +377,7 @@ class RunTime(WebSocketServer):
                     }
 
                     payload_results = convert_and_analyze_mango_data(pred_results, current_item, disease_thresholds)
-
+                    saved_mango_item = save_mango_data(payload_results)
                     # Convert the dictionary to a JSON string
                     json_message = json.dumps(payload_results)
 
