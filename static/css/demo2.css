@@ -121,7 +121,6 @@
 .image-square {
     position: relative;
     width: 100%;
-    padding-bottom: 100%; /* Tạo hình vuông */
     background-color: #f9f9f9;
     border: 2px solid #ddd;
     overflow: hidden; /* Đảm bảo ảnh không tràn ra ngoài */

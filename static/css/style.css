@@ -77,53 +77,6 @@ h2 {
     margin-bottom: 30px;
 }
 
-.image-square {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f9f9f9;
-    border: 2px solid #ddd; /* Default border */
-    height: 150px;
-    text-align: center;
-    font-size: 1.2em;
-    color: #666;
-    position: relative;
-    transition: background-color 0.3s ease-in-out;
-}
-
-/* Add border color based on the color palette */
-.image-square {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: #f9f9f9;
-    border: 2px solid #ddd;
-    height: 150px;
-    text-align: center;
-    font-size: 1.2em;
-    color: #666;
-    position: relative;
-    transition: background-color 0.3s ease-in-out;
-}
-/* When there is an image */
-.image-square.has-image img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-/* Placeholder for empty image boxes */
-.image-square img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.image-square.has-image span {
-    display: none;
-}
-
 /* Placeholder styling */
 .image-box.placeholder {
     height: 150px; /* Placeholder height */
