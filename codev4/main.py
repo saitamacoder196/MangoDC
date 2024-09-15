@@ -82,7 +82,7 @@ class RunTime(WebSocketServer):
                 else:
                     print("ID: ", self.numMango)
                     current_date = datetime.now().strftime("%y.%m.%d")
-                    folder_name = os.path.join(current_date, IMAGE_FOLDER)
+                    folder_name = os.path.join('output', current_date, IMAGE_FOLDER)
                     if not os.path.exists(folder_name):
                         os.makedirs(folder_name)
 
