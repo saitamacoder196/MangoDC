@@ -5,7 +5,7 @@ from codev4.myLib.BaslerCamera import camera
 from codev4.myLib.Control import control
 from codev4.myLib.FindFace import find
 from codev4.myLib.ImageProcess import Processing
-from codev4.socket import WebSocketServer
+from codev4.mysocket import WebSocketServer
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from time import sleep
@@ -18,7 +18,7 @@ import numpy as np
 import os
 import tensorflow as tf
 import threading
-from mango_analysis.utils import save_mango_data
+from codev4.services import save_mango_data
 
 # Load model (chỉ load một lần khi chương trình bắt đầu)
 unet_model = tf.keras.models.load_model("models/rmbnet.keras")
