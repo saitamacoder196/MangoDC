@@ -186,6 +186,73 @@ $(document).ready(function () {
         });
     }
 
+    // Hàm cập nhật kết luận
+    function updateConclusion(conclusionData) {
+        console.log("Conclusion Data:", conclusionData);
+
+        if (!conclusionData) {
+            conclusionData = {
+                detected_areas: [],
+                total_disease_area: 0,
+                total_mango_surface_area: 0,
+                disease_area_percentage: 0,
+                conclusion: "No data available"
+            };
+        }
+
+        let detectedAreasHTML = '';
+        if (Array.isArray(conclusionData.detected_areas) && conclusionData.detected_areas.length > 0) {
+            conclusionData.detected_areas.forEach(area => {
+                if (area && area.image && area.position && area.area_size && area.disease) {
+                    detectedAreasHTML += `<p>Phát hiện vết bệnh tại ảnh <strong>${area.image}</strong> có vị trí tại (<strong>${area.position.x || 'N/A'}</strong>,<strong>${area.position.y || 'N/A'}</strong>), diện tích khoảng <strong>${area.area_size}</strong>, nhận diện là bệnh <strong>${area.disease}</strong>.</p>`;
+                }
+            });
+        }
+        if (detectedAreasHTML === '') {
+            detectedAreasHTML = '<p>No detected areas found.</p>';
+        }
+        $("#conclusion-detected-areas").html(detectedAreasHTML);
+
+        $("#total-disease-area").text(conclusionData.total_disease_area || 'N/A');
+        $("#total-mango-surface-area").text(conclusionData.total_mango_surface_area || 'N/A');
+        $("#disease-area-percentage").text(conclusionData.disease_area_percentage || 'N/A');
+        $("#final-conclusion").text(conclusionData.conclusion || 'No conclusion available.');
+    }
+
+    // Hàm cập nhật các ảnh prediction
+    function updatePredictionImages(predictionImages) {
+        if (!predictionImages) {
+            console.error("No prediction images data provided");
+            return;
+        }
+
+        for (const [key, value] of Object.entries(predictionImages)) {
+            const imageElement = $(`#pred-${key}`);
+            if (imageElement.length) {
+                imageElement.css('background-image', `url(${value})`);
+            } else {
+                console.warn(`Element for prediction image ${key} not found`);
+            }
+        }
+    }
+
+    // Hàm cập nhật các ảnh original
+    function updateOriginalImages(originalImages) {
+        if (!originalImages) {
+            console.error("No original images data provided");
+            return;
+        }
+
+        for (const [key, value] of Object.entries(originalImages)) {
+            const imageElement = $(`#orig-${key}`);
+            if (imageElement.length) {
+                imageElement.css('background-image', `url(${value})`);
+            } else {
+                console.warn(`Element for original image ${key} not found`);
+            }
+        }
+    }
+
     function updateCurrentItem(currentItem) {
         if (!currentItem) {
             console.error("No current item data provided");
