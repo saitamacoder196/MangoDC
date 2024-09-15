@@ -240,13 +240,23 @@ $(document).ready(function () {
         const baseUrl = getBaseUrl();
 
         for (const [key, value] of Object.entries(predictionImages)) {
-            const imageElement = $(`#pred-${key}`);
-            if (imageElement.length) {
-                const normalizedPath = normalizeImagePath(value);
-                const fullImageUrl = `${baseUrl}/${normalizedPath}`;
-                imageElement.css('background-image', `url('${fullImageUrl}')`);
+            const imageContainer = $(`#pred-${key}`);
+            if (imageContainer.length) {
+                // Xóa ảnh cũ nếu có
+                imageContainer.empty();
+
+                if (value && value !== "") {
+                    const normalizedPath = normalizeImagePath(value);
+                    const fullImageUrl = `${baseUrl}/${normalizedPath}`;
+                    const imgElement = $('<img>', {
+                        src: fullImageUrl,
+                        alt: `Prediction ${key}`,
+                        class: 'img-fluid' // Thêm class này nếu bạn muốn ảnh responsive
+                    });
+                    imageContainer.append(imgElement);
+                }
             } else {
-                console.warn(`Element for prediction image ${key} not found`);
+                console.warn(`Container for prediction image ${key} not found`);
             }
         }
     }
@@ -261,13 +271,23 @@ $(document).ready(function () {
         const baseUrl = getBaseUrl();
 
         for (const [key, value] of Object.entries(originalImages)) {
-            const imageElement = $(`#orig-${key}`);
-            if (imageElement.length) {
-                const normalizedPath = normalizeImagePath(value);
-                const fullImageUrl = `${baseUrl}/${normalizedPath}`;
-                imageElement.css('background-image', `url('${fullImageUrl}')`);
+            const imageContainer = $(`#orig-${key}`);
+            if (imageContainer.length) {
+                // Xóa ảnh cũ nếu có
+                imageContainer.empty();
+
+                if (value && value !== "") {
+                    const normalizedPath = normalizeImagePath(value);
+                    const fullImageUrl = `${baseUrl}/${normalizedPath}`;
+                    const imgElement = $('<img>', {
+                        src: fullImageUrl,
+                        alt: `Original ${key}`,
+                        class: 'img-fluid' // Thêm class này nếu bạn muốn ảnh responsive
+                    });
+                    imageContainer.append(imgElement);
+                }
             } else {
-                console.warn(`Element for original image ${key} not found`);
+                console.warn(`Container for original image ${key} not found`);
             }
         }
     }

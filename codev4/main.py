@@ -18,7 +18,7 @@ import numpy as np
 import os
 import tensorflow as tf
 import threading
-from codev4.services import save_mango_data
+from codev4.services import save_mango_data, get_next_mango_id
 
 # Load model (chỉ load một lần khi chương trình bắt đầu)
 unet_model = tf.keras.models.load_model("models/rmbnet.keras")
@@ -297,7 +297,7 @@ class RunTime(WebSocketServer):
 
         self.test = [CMD_MOVE_TO_A, CMD_MOVE_TO_B]
 
-        self.numMango = 1
+        self.numMango = get_next_mango_id()
 
         self.center = []
         self.left = []
