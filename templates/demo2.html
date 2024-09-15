@@ -4,14 +4,27 @@
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <!-- Bên phải: Button "Start" aligned to the right at the top -->
-        <div class="col-md-12 d-flex justify-content-end align-items-center mb-4">
-            <button id="capture-btn" type="button" class="btn btn-success">
-                <i id="capture-icon" class="icon-play"></i> Start
-            </button>
+    <div class="container">
+        <div class="row align-items-center mb-4">
+            <!-- Dropdown chọn Folder Path -->
+            <div class="col-md-6">
+                <label for="folder-path-select" class="form-label">Chọn Folder Path:</label>
+                <select id="folder-path-select" class="form-select">
+                    {% for folder in folder_paths %}
+                        <option value="{{ folder.id }}">{{ folder.folder_path }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Bên phải: Button "Start" aligned to the right at the top -->
+            <div class="col-md-6 d-flex justify-content-end align-items-center">
+                <button id="capture-btn" type="button" class="btn btn-success">
+                    <i id="capture-icon" class="icon-play"></i> Start
+                </button>
+            </div>
         </div>
     </div>
+
 
     <div class="row">
         <!-- Bên trái: Kết quả, Đánh giá và Kết luận -->

@@ -6,10 +6,10 @@ from .models import MangoItem, Image, DetectedArea, Conclusion
 def save_mango_data(payload_results):
     # Lưu MangoItem
     mango_item = MangoItem.objects.create(
-        id=payload_results['current_item']['id'],
+        mango_id=payload_results['current_item']['id'],
         folder_path=payload_results['current_item']['folder_path']
     )
-
+    
     # Lưu Images
     for image_type in ['prediction_images', 'original_images']:
         for position, path in payload_results[image_type].items():

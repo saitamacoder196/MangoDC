@@ -16,10 +16,8 @@ import json
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-import random
 import tensorflow as tf
 import threading
-from django.db import transaction
 from mango_analysis.utils import save_mango_data
 
 # Load model (chỉ load một lần khi chương trình bắt đầu)
@@ -378,12 +376,14 @@ class RunTime(WebSocketServer):
 
                     payload_results = convert_and_analyze_mango_data(pred_results, current_item, disease_thresholds)
                     saved_mango_item = save_mango_data(payload_results)
-                    # Convert the dictionary to a JSON string
-                    json_message = json.dumps(payload_results)
 
-                    # Send the JSON string to clients via WebSocket
-                    await self.send_message(json_message)  # Use asyncio to send the message
-                    await asyncio.sleep(5)
+                    if saved_mango_item:
+                        # Convert the dictionary to a JSON string
+                        json_message = json.dumps(payload_results)
+                        # Send the JSON string to clients via WebSocket
+                        await self.send_message(json_message)  # Use asyncio to send the message
+                        await asyncio.sleep(5)
+
                     # Update state
                     self.numMango += 1
                     self.command = np.random.choice(self.test)
@@ -430,205 +430,6 @@ class RunTime(WebSocketServer):
     def threadPool(self):
         with ThreadPoolExecutor(max_workers=1) as executor:
             executor.submit(self.sendData)
-
-    # Function to randomly pick one of the mock data items and send it through WebSocket
-    async def mock_send(self):
-        # Mock data for sending to WebSocket clients
-        mock_data = [
-            {
-                "current_item": {
-                    "id": "1-VL-DE",
-                    "folder_path": "D://mangoes"
-                },
-                "prediction_images": {
-                    "Left_1": "path/to/prediction_image_left_1.jpg",
-                    "Left_2": "path/to/prediction_image_left_2.jpg",
-                    "Left_3": "path/to/prediction_image_left_3.jpg",
-                    "Left_4": "path/to/prediction_image_left_4.jpg",
-                    "Center_1": "path/to/prediction_image_center_1.jpg",
-                    "Center_2": "path/to/prediction_image_center_2.jpg",
-                    "Center_3": "path/to/prediction_image_center_3.jpg",
-                    "Center_4": "path/to/prediction_image_center_4.jpg",
-                    "Right_1": "path/to/prediction_image_right_1.jpg",
-                    "Right_2": "path/to/prediction_image_right_2.jpg",
-                    "Right_3": "path/to/prediction_image_right_3.jpg",
-                    "Right_4": "path/to/prediction_image_right_4.jpg"
-                },
-                "original_images": {
-                    "Left_1": "path/to/original_image_left_1.jpg",
-                    "Left_2": "path/to/original_image_left_2.jpg",
-                    "Left_3": "path/to/original_image_left_3.jpg",
-                    "Left_4": "path/to/original_image_left_4.jpg",
-                    "Center_1": "path/to/original_image_center_1.jpg",
-                    "Center_2": "path/to/original_image_center_2.jpg",
-                    "Center_3": "path/to/original_image_center_3.jpg",
-                    "Center_4": "path/to/original_image_center_4.jpg",
-                    "Right_1": "path/to/original_image_right_1.jpg",
-                    "Right_2": "path/to/original_image_right_2.jpg",
-                    "Right_3": "path/to/original_image_right_3.jpg",
-                    "Right_4": "path/to/original_image_right_4.jpg"
-                },
-                "conclusion": {
-                    "detected_areas": [
-                        {
-                            "image": "xxx",
-                            "position": {
-                                "x": 120,
-                                "y": 450
-                            },
-                            "area_size": 1000,
-                            "disease": "Disease A"
-                        },
-                        {
-                            "image": "xxx2",
-                            "position": {
-                                "x": 220,
-                                "y": 550
-                            },
-                            "area_size": 1500,
-                            "disease": "Disease B"
-                        }
-                    ],
-                    "total_disease_area": 85375.50,
-                    "total_mango_surface_area": 559946.50,
-                    "disease_area_percentage": 15.25,
-                    "conclusion": "Reject: Xoài bệnh abc; Accept: Không phát hiện dấu hiệu bệnh."
-                }
-            },
-            {
-                "current_item": {
-                    "id": "2-VL-DE",
-                    "folder_path": "D://mangoes2"
-                },
-                "prediction_images": {
-                    "Left_1": "path/to/prediction_image_left_1_v2.jpg",
-                    "Left_2": "path/to/prediction_image_left_2_v2.jpg",
-                    "Left_3": "path/to/prediction_image_left_3_v2.jpg",
-                    "Left_4": "path/to/prediction_image_left_4_v2.jpg",
-                    "Center_1": "path/to/prediction_image_center_1_v2.jpg",
-                    "Center_2": "path/to/prediction_image_center_2_v2.jpg",
-                    "Center_3": "path/to/prediction_image_center_3_v2.jpg",
-                    "Center_4": "path/to/prediction_image_center_4_v2.jpg",
-                    "Right_1": "path/to/prediction_image_right_1_v2.jpg",
-                    "Right_2": "path/to/prediction_image_right_2_v2.jpg",
-                    "Right_3": "path/to/prediction_image_right_3_v2.jpg",
-                    "Right_4": "path/to/prediction_image_right_4_v2.jpg"
-                },
-                "original_images": {
-                    "Left_1": "path/to/original_image_left_1_v2.jpg",
-                    "Left_2": "path/to/original_image_left_2_v2.jpg",
-                    "Left_3": "path/to/original_image_left_3_v2.jpg",
-                    "Left_4": "path/to/original_image_left_4_v2.jpg",
-                    "Center_1": "path/to/original_image_center_1_v2.jpg",
-                    "Center_2": "path/to/original_image_center_2_v2.jpg",
-                    "Center_3": "path/to/original_image_center_3_v2.jpg",
-                    "Center_4": "path/to/original_image_center_4_v2.jpg",
-                    "Right_1": "path/to/original_image_right_1_v2.jpg",
-                    "Right_2": "path/to/original_image_right_2_v2.jpg",
-                    "Right_3": "path/to/original_image_right_3_v2.jpg",
-                    "Right_4": "path/to/original_image_right_4_v2.jpg"
-                },
-                "conclusion": {
-                    "detected_areas": [
-                        {
-                            "image": "yyy",
-                            "position": {
-                                "x": 320,
-                                "y": 150
-                            },
-                            "area_size": 800,
-                            "disease": "Disease C"
-                        },
-                        {
-                            "image": "yyy2",
-                            "position": {
-                                "x": 420,
-                                "y": 250
-                            },
-                            "area_size": 1200,
-                            "disease": "Disease D"
-                        }
-                    ],
-                    "total_disease_area": 76320.50,
-                    "total_mango_surface_area": 659946.50,
-                    "disease_area_percentage": 11.57,
-                    "conclusion": "Reject: Xoài bệnh xyz; Accept: Không phát hiện dấu hiệu bệnh."
-                }
-            },
-            {
-                "current_item": {
-                    "id": "3-VL-DE",
-                    "folder_path": "D://mangoes3"
-                },
-                "prediction_images": {
-                    "Left_1": "path/to/prediction_image_left_1_v3.jpg",
-                    "Left_2": "path/to/prediction_image_left_2_v3.jpg",
-                    "Left_3": "path/to/prediction_image_left_3_v3.jpg",
-                    "Left_4": "path/to/prediction_image_left_4_v3.jpg",
-                    "Center_1": "path/to/prediction_image_center_1_v3.jpg",
-                    "Center_2": "path/to/prediction_image_center_2_v3.jpg",
-                    "Center_3": "path/to/prediction_image_center_3_v3.jpg",
-                    "Center_4": "path/to/prediction_image_center_4_v3.jpg",
-                    "Right_1": "path/to/prediction_image_right_1_v3.jpg",
-                    "Right_2": "path/to/prediction_image_right_2_v3.jpg",
-                    "Right_3": "path/to/prediction_image_right_3_v3.jpg",
-                    "Right_4": "path/to/prediction_image_right_4_v3.jpg"
-                },
-                "original_images": {
-                    "Left_1": "path/to/original_image_left_1_v3.jpg",
-                    "Left_2": "path/to/original_image_left_2_v3.jpg",
-                    "Left_3": "path/to/original_image_left_3_v3.jpg",
-                    "Left_4": "path/to/original_image_left_4_v3.jpg",
-                    "Center_1": "path/to/original_image_center_1_v3.jpg",
-                    "Center_2": "path/to/original_image_center_2_v3.jpg",
-                    "Center_3": "path/to/original_image_center_3_v3.jpg",
-                    "Center_4": "path/to/original_image_center_4_v3.jpg",
-                    "Right_1": "path/to/original_image_right_1_v3.jpg",
-                    "Right_2": "path/to/original_image_right_2_v3.jpg",
-                    "Right_3": "path/to/original_image_right_3_v3.jpg",
-                    "Right_4": "path/to/original_image_right_4_v3.jpg"
-                },
-                "conclusion": {
-                    "detected_areas": [
-                        {
-                            "image": "zzz",
-                            "position": {
-                                "x": 420,
-                                "y": 320
-                            },
-                            "area_size": 1200,
-                            "disease": "Disease E"
-                        },
-                        {
-                            "image": "zzz2",
-                            "position": {
-                                "x": 520,
-                                "y": 420
-                            },
-                            "area_size": 1800,
-                            "disease": "Disease F"
-                        }
-                    ],
-                    "total_disease_area": 98275.00,
-                    "total_mango_surface_area": 859946.50,
-                    "disease_area_percentage": 11.43,
-                    "conclusion": "Reject: Xoài bệnh def; Accept: Không phát hiện dấu hiệu bệnh."
-                }
-            }
-        ]
-        while self.running:
-            # Select a random item from the mock data
-            selected_data = random.choice(mock_data)
-            
-            # Convert the selected item to JSON string
-            message = json.dumps(selected_data)
-            
-            # Send the message to the WebSocket clients
-            await self.send_message(message)
-            
-            # Wait 5 seconds before sending the next message
-            await asyncio.sleep(5)
-
              
     def start(self):
         server_thread = threading.Thread(target=self.threadPool)
@@ -636,9 +437,6 @@ class RunTime(WebSocketServer):
         self.add_task(self.getFace)
         websocket_thread = threading.Thread(target=self.start_server)
         websocket_thread.start()
-
-        # self.getFace()
-
         server_thread.join()
         websocket_thread.join()
 

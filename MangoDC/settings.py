@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'mango_analysis',
+    'mango_analysis'
 ]
 
 ASGI_APPLICATION = 'MangoDC.asgi.application'

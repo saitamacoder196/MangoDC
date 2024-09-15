@@ -26,20 +26,6 @@ def demo(request):
 def demo2(request):
     return render(request, 'demo2.html')
 
-def capture(request): 
-    if not server.running:  # Only start if it's not already running
-        threading.Thread(target=server.start).start()  # Run server.start() in a new thread
-        return JsonResponse({'message': 'WebSocket server is starting in the background!'})
-    else:
-        return JsonResponse({'message': 'WebSocket server is already running!'})
-
-def turnoff(request):
-    if server.running:  # Only stop if it's running
-        threading.Thread(target=server.stop).start()  # Run server.stop() in a new thread
-        return JsonResponse({'message': 'WebSocket server is stopping in the background!'})
-    else:
-        return JsonResponse({'message': 'WebSocket server is not running!'})
-
 def sort_image_files(image_files):
     # Define a custom sorting key to arrange by Left, Center, Right, and index
     def sort_key(item):

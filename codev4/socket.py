@@ -48,7 +48,6 @@ class WebSocketServer:
             for client in disconnected_clients:
                 await self.unregister(client)
 
-
     async def handle_client(self, websocket, path):
         # Handle client connection
         await self.register(websocket)
@@ -87,6 +86,9 @@ class WebSocketServer:
 
         # Set up the WebSocket server on a different port, e.g., 8001
         start_server = websockets.serve(self.handle_client, "localhost", 8001)
+
+        # Hiển thị thông báo khi server đang được bật
+        print("WebSocket server is running on ws://localhost:8001")
 
         # Run the server and the run_tasks task in parallel
         self.loop.run_until_complete(start_server)

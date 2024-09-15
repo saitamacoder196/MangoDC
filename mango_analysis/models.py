@@ -1,11 +1,13 @@
 from django.db import models
 
 class MangoItem(models.Model):
-    id = models.CharField(max_length=50, primary_key=True)
+    id = models.AutoField(primary_key=True)  # Tự động tăng
+    mango_id = models.CharField(max_length=50, unique=True)  # Mã xoài ở dạng text, đảm bảo duy nhất
     folder_path = models.CharField(max_length=255)
 
     def __str__(self):
-        return self.id
+        return self.mango_id
+
 
 class Image(models.Model):
     mango_item = models.ForeignKey(MangoItem, on_delete=models.CASCADE, related_name='images')
