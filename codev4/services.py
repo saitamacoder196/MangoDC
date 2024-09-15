@@ -67,7 +67,7 @@ def get_next_mango_id():
         if max_mango_id is None:
             return 1
         else:
-            return max_mango_id + 1
+            return int(max_mango_id) + 1
     except Exception as e:
         print(f"Error while fetching next mango_id: {e}")
         return None
