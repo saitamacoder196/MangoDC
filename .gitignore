@@ -4,6 +4,9 @@ db.sqlite3
 /media
 .env
 *.log
+*.keras
+*.h5
+*.jpg
 /output
 launch.json
 /staticfiles

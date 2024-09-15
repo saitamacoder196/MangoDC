@@ -43,3 +43,4 @@ CMD_ON_XYLANH1 = "onxylanh1"
 
 # File saving settings
 IMAGE_FOLDER = "No Tape"
+PREDICT_FOLDER = "Predict"
