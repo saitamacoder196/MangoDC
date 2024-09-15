@@ -276,14 +276,14 @@ def convert_and_analyze_mango_data(input_data: Dict[str, Any],
 class RunTime(WebSocketServer):
     def __init__(self):
         super().__init__()
-        # self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
+        self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
         print("Wait to connect to Arduino !")
         print("....")
         print("Connected")
         self.command = None
 
-        # self.cam = camera()
-        # self.cam.OpenCam()
+        self.cam = camera()
+        self.cam.OpenCam()
         self.image = []
 
         self.Angle = ROTATION_ANGLE
@@ -375,14 +375,14 @@ class RunTime(WebSocketServer):
                     }
 
                     payload_results = convert_and_analyze_mango_data(pred_results, current_item, disease_thresholds)
-                    saved_mango_item = save_mango_data(payload_results)
+                    # saved_mango_item = save_mango_data(payload_results)
 
-                    if saved_mango_item:
-                        # Convert the dictionary to a JSON string
-                        json_message = json.dumps(payload_results)
-                        # Send the JSON string to clients via WebSocket
-                        await self.send_message(json_message)  # Use asyncio to send the message
-                        await asyncio.sleep(5)
+                    # if saved_mango_item:
+                    #     # Convert the dictionary to a JSON string
+                    #     json_message = json.dumps(payload_results)
+                    #     # Send the JSON string to clients via WebSocket
+                    #     await self.send_message(json_message)  # Use asyncio to send the message
+                    #     await asyncio.sleep(5)
 
                     # Update state
                     self.numMango += 1
