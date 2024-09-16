@@ -386,7 +386,13 @@ class RunTime(WebSocketServer):
 
                     # Update state
                     self.numMango += 1
-                    self.command = np.random.choice(self.test)
+                    if payload_results["conclusion"]["total_disease_area"] > CLASSIFICATION_THRESHOLD :
+                        print("Move To A")
+                        self.command = CMD_MOVE_TO_A
+                    else:
+                        print("Move To B")
+                        self.command = CMD_MOVE_TO_B
+                    # self.command = np.random.choice(self.test)
                     self.END = True
                     sleep(2)
 
