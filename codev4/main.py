@@ -273,17 +273,26 @@ def convert_and_analyze_mango_data(input_data: Dict[str, Any],
 
     return result
 
+# Thêm hàm gửi thông báo trạng thái
+async def send_status_message(websocket, current_step, total_steps, step_name):
+    status_message = {
+        "type": "status_update",
+        "current_step": current_step,
+        "total_steps": total_steps,
+        "step_name": step_name
+    }
+    await websocket.send(json.dumps(status_message))
 class RunTime(WebSocketServer):
     def __init__(self):
         super().__init__()
-        self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
+        # self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
         print("Wait to connect to Arduino !")
         print("....")
         print("Connected")
         self.command = None
 
-        self.cam = camera()
-        self.cam.OpenCam()
+        # self.cam = camera()
+        # self.cam.OpenCam()
         self.image = []
 
         self.Angle = ROTATION_ANGLE
@@ -440,7 +449,7 @@ class RunTime(WebSocketServer):
     def start(self):
         server_thread = threading.Thread(target=self.threadPool)
         server_thread.start()
-        self.add_task(self.getFace)
+        # self.add_task(self.getFace)
         websocket_thread = threading.Thread(target=self.start_server)
         websocket_thread.start()
         server_thread.join()
