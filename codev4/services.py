@@ -1,5 +1,5 @@
-from .database import Session
-from .models import MangoItem, Image, DetectedArea, Conclusion
+from database import Session
+from models import MangoItem, Image, DetectedArea, Conclusion
 from sqlalchemy import func
 
 def save_mango_data(payload_results):
@@ -57,13 +57,15 @@ def save_mango_data(payload_results):
 
     return mango_item 
 
-def get_next_mango_id():
+def get_next_mango_id(folder_path):
     session = Session()
     try:
-        # Truy vấn mango_id lớn nhất hiện có
-        max_mango_id = session.query(func.max(MangoItem.mango_id)).scalar()
+        # Truy vấn mango_id lớn nhất dựa trên folder_path
+        max_mango_id = session.query(func.max(MangoItem.mango_id))\
+                              .filter(MangoItem.folder_path == folder_path)\
+                              .scalar()
 
-        # Nếu bảng rỗng, trả về giá trị khởi tạo (ví dụ: 1)
+        # Nếu không có kết quả trong folder_path đó, trả về giá trị khởi tạo (ví dụ: 1)
         if max_mango_id is None:
             return 1
         else:

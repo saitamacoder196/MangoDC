@@ -5,7 +5,7 @@ CAMERA_PORT_LEFT = 1
 CAMERA_PORT_CENTER = 0
 
 # Arduino control settings
-ARDUINO_PORT = 'COM3'
+ARDUINO_PORT = 'COM7'
 ARDUINO_BAUDRATE = 115200
 
 # Mango rotation settings
@@ -32,11 +32,12 @@ MANGO_DETECTION_LOWER = [0, 0, 150]
 MANGO_DETECTION_UPPER = [255, 255, 255]
 
 # Classification threshold
-CLASSIFICATION_THRESHOLD = 200
+CLASSIFICATION_THRESHOLD = 260
 
 # Command strings
 CMD_QUICK_ROTATE = "quickrotate"
-CMD_SLOW_ROTATE = "slowrotate"
+CMD_SLOW_ROTATE = "slowrotate" 
+CMD_STOP_ROTATE = "stoprotate"
 CMD_MOVE_TO_A = "move2A"
 CMD_MOVE_TO_B = "move2B"
 CMD_ON_XYLANH1 = "onxylanh1"

@@ -12,7 +12,7 @@ class MangoAnalysisConfig(AppConfig):
     server_running = False
 
     def ready(self):
-        from codev4.main import RunTime
+        # from main import RunTime
 
         # Function to check if the port is in use
         def is_port_in_use(port):
@@ -29,13 +29,13 @@ class MangoAnalysisConfig(AppConfig):
             return
 
         # Check if the server is already running
-        if not MangoAnalysisConfig.server_running:
-            print("Starting server in a new thread...")
-            server = RunTime()
+        # if not MangoAnalysisConfig.server_running:
+        #     print("Starting server in a new thread...")
+        #     server = RunTime()
 
-            # Start the server in a new thread
-            MangoAnalysisConfig.server_thread = threading.Thread(target=server.start)
-            MangoAnalysisConfig.server_thread.start()
-            MangoAnalysisConfig.server_running = True
-        else:
-            print("Server is already running.")
+        #     # Start the server in a new thread
+        #     MangoAnalysisConfig.server_thread = threading.Thread(target=server.start)
+        #     MangoAnalysisConfig.server_thread.start()
+        #     MangoAnalysisConfig.server_running = True
+        # else:
+        #     print("Server is already running.")

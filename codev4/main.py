@@ -1,11 +1,14 @@
 # Import các hằng số từ file config
-from codev4.config import *
-from codev4.myLib import Module as mod
-from codev4.myLib.BaslerCamera import camera
-from codev4.myLib.Control import control
-from codev4.myLib.FindFace import find
-from codev4.myLib.ImageProcess import Processing
-from codev4.mysocket import WebSocketServer
+import pdb
+from tqdm import tqdm
+from myLib import ImageProcess
+from config import *
+from myLib import Module as mod
+from myLib.BaslerCamera import camera
+from myLib.Control import control
+from myLib.FindFace import find
+from myLib.ImageProcess import Processing
+from mysocket import WebSocketServer
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from time import sleep
@@ -18,7 +21,10 @@ import numpy as np
 import os
 import tensorflow as tf
 import threading
-from codev4.services import save_mango_data, get_next_mango_id
+from services import save_mango_data, get_next_mango_id
+
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # Tắt tất cả các cảnh báo và thông tin từ TensorFlow
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)  # Chỉ hiển thị các lỗi
 
 # Load model (chỉ load một lần khi chương trình bắt đầu)
 unet_model = tf.keras.models.load_model("models/rmbnet.keras")
@@ -38,7 +44,7 @@ def remove_background_from_image(image, model, img_size=(256, 256)):
     input_image = np.expand_dims(resized_image, axis=0) / 255.0  # Thêm batch size và normalize
 
     # Dự đoán mask bằng mô hình đã huấn luyện
-    predicted_mask = model.predict(input_image)[0]
+    predicted_mask = model.predict(input_image, verbose=0)[0]
     
     # Resize mask về kích thước ban đầu của ảnh
     predicted_mask = cv2.resize(predicted_mask, original_size[::-1])
@@ -146,23 +152,24 @@ def process_single_image(image_path, unet_model, mangoddsnet_model):
     image_no_bg = remove_background_from_image(image, unet_model)
     if image_no_bg is None:
         raise ValueError("Lỗi khi remove background")
-    
+
     mango_mask = create_mango_mask(image_no_bg)
     mango_contour = find_mango_contour(mango_mask)
     disease_mask = create_disease_mask(image_no_bg)
     disease_contours = find_disease_contours(disease_mask)
-    
+
     if not disease_contours:
         print("Không phát hiện vùng bệnh")
         return image_no_bg, 0, cv2.contourArea(mango_contour), 0, [], [], []
-    
+
     result_image = draw_contours(image_no_bg, mango_contour, disease_contours)
     mango_area, disease_area, disease_percentage = calculate_areas(mango_contour, disease_contours)
-    
+
     bounding_boxes = cut_disease_bounding_boxes(image_no_bg, disease_contours)
     disease_predictions = predict_disease(bounding_boxes, mangoddsnet_model)
-    
+
     return result_image, disease_area, mango_area, disease_percentage, disease_contours, bounding_boxes, disease_predictions
+
 
 def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsnet_model):
     result_json = {
@@ -177,7 +184,7 @@ def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsne
 
     try:
         result_image, disease_area, mango_area, disease_percentage, disease_contours, bounding_boxes, disease_predictions = process_single_image(image_path, unet_model, mangoddsnet_model)
-        
+        pdb.set_trace()
         base_name = os.path.basename(image_path)
         result_image_path = os.path.join(output_folder, f"processed_{base_name}")
         cv2.imwrite(result_image_path, result_image)
@@ -213,7 +220,7 @@ def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsne
     return result_json
 
 def convert_and_analyze_mango_data(input_data: Dict[str, Any], 
-                                   current_item: Dict[str, Any], 
+                                   current_item: Dict[str, Any],
                                    disease_thresholds: Dict[str, float]) -> Dict[str, Any]:
     result = {
         "current_item": current_item,
@@ -227,21 +234,18 @@ def convert_and_analyze_mango_data(input_data: Dict[str, Any],
             "conclusion": ""
         }
     }
-
+    
     total_disease_area = 0
     total_mango_surface_area = 0
     disease_counts = {}
-
+    
     for image_key, image_data in input_data.items():
-        # Cập nhật đường dẫn ảnh
         result["prediction_images"][image_key] = image_data["processed_image"]
         result["original_images"][image_key] = image_data["original_image"]
-
-        # Cập nhật tổng diện tích
+        
         total_mango_surface_area += image_data["mango_area"]
         total_disease_area += image_data["disease_area"]
-
-        # Thêm thông tin về các vùng bệnh được phát hiện
+        
         for disease in image_data["detected_diseases"]:
             result["conclusion"]["detected_areas"].append({
                 "image": image_key,
@@ -249,28 +253,30 @@ def convert_and_analyze_mango_data(input_data: Dict[str, Any],
                 "area_size": disease["area_size"],
                 "disease": disease["disease"]
             })
-
-            # Đếm số lượng từng loại bệnh
+            
             if disease["disease"] not in disease_counts:
                 disease_counts[disease["disease"]] = 0
             disease_counts[disease["disease"]] += disease["area_size"]
-
-    # Cập nhật kết quả tổng hợp
+    
     result["conclusion"]["total_disease_area"] = total_disease_area
     result["conclusion"]["total_mango_surface_area"] = total_mango_surface_area
     result["conclusion"]["disease_area_percentage"] = (total_disease_area / total_mango_surface_area * 100) if total_mango_surface_area > 0 else 0
-
-    # Đưa ra kết luận
-    conclusions = []
-    for disease, area in disease_counts.items():
-        if area > disease_thresholds.get(disease, 0):
-            conclusions.append(f"Reject: Xoài bệnh {disease}")
-
-    if not conclusions:
-        conclusions.append("Accept: Không phát hiện dấu hiệu bệnh đáng kể.")
-
-    result["conclusion"]["conclusion"] = "; ".join(conclusions)
-
+    
+    # Find the disease with the largest area
+    largest_disease = max(disease_counts.items(), key=lambda x: x[1], default=(None, 0))
+    
+    if largest_disease[0] is not None:
+        disease_name = largest_disease[0]
+        disease_area = largest_disease[1]
+        disease_percentage = (disease_area / total_mango_surface_area * 100) if total_mango_surface_area > 0 else 0
+        
+        if disease_area > disease_thresholds.get(disease_name, 0):
+            result["conclusion"]["conclusion"] = f"Reject: {disease_name} ({disease_percentage:.2f}%)"
+        else:
+            result["conclusion"]["conclusion"] = "Accept (không phát hiện bệnh)"
+    else:
+        result["conclusion"]["conclusion"] = "Accept (không phát hiện bệnh)"
+    
     return result
 
 # Thêm hàm gửi thông báo trạng thái
@@ -285,14 +291,14 @@ async def send_status_message(websocket, current_step, total_steps, step_name):
 class RunTime(WebSocketServer):
     def __init__(self):
         super().__init__()
-        # self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
+        self.control = control(ARDUINO_PORT, ARDUINO_BAUDRATE)
         print("Wait to connect to Arduino !")
         print("....")
         print("Connected")
         self.command = None
 
-        # self.cam = camera()
-        # self.cam.OpenCam()
+        self.cam = camera()
+        self.cam.OpenCam()
         self.image = []
 
         self.Angle = ROTATION_ANGLE
@@ -305,8 +311,10 @@ class RunTime(WebSocketServer):
         self.STOP = False
 
         self.test = [CMD_MOVE_TO_A, CMD_MOVE_TO_B]
-
-        self.numMango = get_next_mango_id()
+        self.current_date = datetime.now().strftime("%y.%m.%d")
+        self.folder_name = os.path.join('static', 'mangoes', self.current_date, IMAGE_FOLDER)
+        self.prediction_folder = os.path.join('static', 'mangoes', self.current_date, PREDICT_FOLDER)
+        self.numMango = get_next_mango_id(self.current_date)
 
         self.center = []
         self.left = []
@@ -344,27 +352,25 @@ class RunTime(WebSocketServer):
                         self.command = CMD_SLOW_ROTATE
                 else:
                     print("ID: ", self.numMango)
-                    current_date = datetime.now().strftime("%y.%m.%d")
-                    folder_name = os.path.join('static', 'mangoes', current_date, IMAGE_FOLDER)
-                    if not os.path.exists(folder_name):
-                        os.makedirs(folder_name)
-
-                    prediction_folder = os.path.join('static', 'mangoes', current_date, PREDICT_FOLDER)
-                    if not os.path.exists(prediction_folder):
-                        os.makedirs(prediction_folder)
+                    
+                    if not os.path.exists(self.folder_name):
+                        os.makedirs(self.folder_name)
+                    
+                    if not os.path.exists(self.prediction_folder):
+                        os.makedirs(self.prediction_folder)
                    
                     # Save images and collect the paths
                     pred_results = {}
-                    for i in range(len(self.center)):
-                        center_path = f"{folder_name}/{self.numMango}-Center_{i+1}.jpg"
+
+                    for i in tqdm(range(len(self.center)), desc="Processing center images", unit="image"):
+                        center_path = f"{self.folder_name}/{self.numMango}-Center_{i+1}.jpg"
                         cv2.imwrite(center_path, self.center[i])
-                        pred_results[f"Center_{i+1}"] = analyze_single_mango_image(center_path, prediction_folder, unet_model, mangoddsnet_model) 
+                        pred_results[f"Center_{i+1}"] = analyze_single_mango_image(center_path, self.prediction_folder, unet_model, mangoddsnet_model) 
 
-                    for i in range(len(self.left)):
-                        left_path = f"{folder_name}/{self.numMango}-Left_{i+1}.jpg"
+                    for i in tqdm(range(len(self.left)), desc="Processing left images", unit="image"):
+                        left_path = f"{self.folder_name}/{self.numMango}-Left_{i+1}.jpg"
                         cv2.imwrite(left_path, self.left[i])
-                        pred_results[f"Left_{i+1}"] = analyze_single_mango_image(left_path, prediction_folder, unet_model, mangoddsnet_model) 
-
+                        pred_results[f"Left_{i+1}"] = analyze_single_mango_image(left_path, self.prediction_folder, unet_model, mangoddsnet_model)
                     # for i in range(len(self.right)):
                     #     right_path = f"{folder_name}/{self.numMango}-Right_{i+1}.jpg"
                     #     cv2.imwrite(right_path, self.right[i])
@@ -372,7 +378,7 @@ class RunTime(WebSocketServer):
 
                     current_item = {
                         "id": self.numMango,
-                        "folder_path": current_date
+                        "folder_path": self.current_date
                     }
 
                     disease_thresholds = {
@@ -382,7 +388,6 @@ class RunTime(WebSocketServer):
                         "RD": 10,
                         "TT": 10
                     }
-
                     payload_results = convert_and_analyze_mango_data(pred_results, current_item, disease_thresholds)
                     saved_mango_item = save_mango_data(payload_results)
 
@@ -409,9 +414,11 @@ class RunTime(WebSocketServer):
                 self.center = []
                 self.left = []
                 self.right = []
+                self.command = CMD_STOP_ROTATE
                 self.command = CMD_ON_XYLANH1
                 self.findMango.resetStatus()
                 self.END = False
+                
 
             if self.TERMINATE:
                 print('Program stopped!')
@@ -449,7 +456,7 @@ class RunTime(WebSocketServer):
     def start(self):
         server_thread = threading.Thread(target=self.threadPool)
         server_thread.start()
-        # self.add_task(self.getFace)
+        self.add_task(self.getFace)
         websocket_thread = threading.Thread(target=self.start_server)
         websocket_thread.start()
         server_thread.join()
@@ -458,7 +465,7 @@ class RunTime(WebSocketServer):
     def stop(self):
         print("Stopping the process...")
         self.TERMINATE = True
-        # self.cam.CloseCam()
+        self.cam.CloseCam()
         print("Process stopped.")
 
 if __name__ == "__main__":
