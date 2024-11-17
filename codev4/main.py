@@ -148,6 +148,52 @@ def predict_disease(bounding_boxes, model):
             predictions.append(None)  # Hoặc một giá trị mặc định khác
     return predictions
 
+def get_box_coordinates(image):
+        """Tạo lưới ô vuông theo kích thước được định nghĩa trong bài báo"""
+        h, w = image.shape[:2]
+        box_size = [21, 15]  # Kích thước box như trong project gốc
+        div_w = w/box_size[0]
+        div_h = h/box_size[1]
+        
+        box_coordinates = []
+        for j in range(box_size[1]):
+            for k in range(box_size[0]):
+                point1 = (int(k*div_w), int(j*div_h))
+                point2 = (int((k+1)*div_w), int((j+1)*div_h))
+                box_coordinates.append([point1, point2])
+                
+        return box_coordinates
+    
+def draw_area_info(image, total_defect_area, face_area):
+    """
+    Vẽ thông tin diện tích lên ảnh
+    Args:
+        image: Ảnh cần vẽ
+        total_defect_area: Tổng diện tích vết bệnh (mm2)
+        face_area: Diện tích mặt xoài (mm2)
+    Returns:
+        image: Ảnh đã vẽ thông tin
+    """
+    # Tạo bản sao để không ảnh hưởng đến ảnh gốc
+    result = image.copy()
+    
+    # Cấu hình text
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 1.0
+    color = (0, 0, 255)  # BGR color (đỏ)
+    thickness = 2
+    
+    # Vẽ diện tích vết bệnh
+    area_text = f"Total defect area: {total_defect_area:.1f} mm2"
+    cv2.putText(result, area_text, (10, 30), font, font_scale, color, thickness)
+    
+    # Vẽ tỷ lệ
+    ratio = (total_defect_area/face_area*100) if face_area > 0 else 0
+    ratio_text = f"Defect ratio: {ratio:.1f}%"
+    cv2.putText(result, ratio_text, (10, 70), font, font_scale, color, thickness)
+    
+    return result
+
 def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio):
     image = read_image(image_path)
     image_no_bg = remove_background_from_image(image, unet_model)
@@ -155,7 +201,18 @@ def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
         raise ValueError("Lỗi khi remove background")
 
     mango_mask = create_mango_mask(image_no_bg)
-    mango_contour = find_mango_contour(mango_mask)
+    mask_mango, mask_removed_stem = mod.get_CenterMask(image)
+    mango_contour, defect_mask = mod.find_DefectContours(
+            face=image,
+            maskMango=mask_mango,
+            cordinate_Box=get_box_coordinates(image),
+            plotsmall=False, 
+            plotbig=False,
+            tape=False
+        )
+    
+    # mango_contour = find_mango_contour(mango_mask)
+    
     disease_mask = create_disease_mask(image_no_bg)
     disease_contours = find_disease_contours(disease_mask)
 
@@ -163,7 +220,7 @@ def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
         # print("Không phát hiện vùng bệnh")
         return image_no_bg, 0, cv2.contourArea(mango_contour), 0, [], [], []
 
-    result_image = draw_contours(image_no_bg, mango_contour, disease_contours)
+    
     # mango_area, disease_area, disease_percentage = calculate_areas(mango_contour, disease_contours)
 
     bounding_boxes = cut_disease_bounding_boxes(image_no_bg, disease_contours)
@@ -171,6 +228,8 @@ def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
     # scale_ratio = 0.5 * 0.56  # cho ảnh mặt
     msis = MSISDefectMeasurement(scale_ratio=scale_ratio)
     total_defect_area, face_area, _ = msis.measure_defect_area(image, disease_contours, is_side_view=True)
+    result_image = draw_contours(image_no_bg, mango_contour, disease_contours)
+    result_image = draw_area_info(result_image, total_defect_area, face_area)
     return result_image, total_defect_area, face_area, disease_contours, bounding_boxes, disease_predictions
 
 
