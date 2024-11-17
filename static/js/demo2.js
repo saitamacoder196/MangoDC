@@ -204,7 +204,7 @@ $(document).ready(function () {
         if (Array.isArray(conclusionData.detected_areas) && conclusionData.detected_areas.length > 0) {
             conclusionData.detected_areas.forEach(area => {
                 if (area && area.image && area.position && area.area_size && area.disease) {
-                    detectedAreasHTML += `<p>Phát hiện vết bệnh tại ảnh <strong>${area.image}</strong> có vị trí tại (<strong>${area.position.x || 'N/A'}</strong>,<strong>${area.position.y || 'N/A'}</strong>), diện tích khoảng <strong>${area.area_size}</strong>, nhận diện là bệnh <strong>${area.disease}</strong>.</p>`;
+                    detectedAreasHTML += `<p>Phát hiện vết bệnh tại ảnh <strong>${area.image}</strong> có vị trí tại (<strong>${area.position.x || '0'}</strong>,<strong>${area.position.y || '0'}</strong>), diện tích khoảng <strong>${area.area_size}</strong>, nhận diện là bệnh <strong>${area.disease}</strong>.</p>`;
                 }
             });
         }
@@ -213,12 +213,12 @@ $(document).ready(function () {
         }
         $("#conclusion-detected-areas").html(detectedAreasHTML);
 
-        $("#total-disease-area").text(conclusionData.total_disease_area || 'N/A');
-        $("#total-mango-surface-area").text(conclusionData.total_mango_surface_area || 'N/A');
+        $("#total-disease-area").text(conclusionData.total_disease_area || '0');
+        $("#total-mango-surface-area").text(conclusionData.total_mango_surface_area || '0');
         $("#disease-area-percentage").text(
             conclusionData.disease_area_percentage 
                 ? (parseFloat(conclusionData.disease_area_percentage) * 100).toFixed(2) + '%' 
-                : 'N/A'
+                : '0'
         );
         $("#final-conclusion").text(conclusionData.conclusion || 'No conclusion available.');
     }
