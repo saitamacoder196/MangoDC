@@ -5,7 +5,7 @@ CAMERA_PORT_LEFT = 1
 CAMERA_PORT_CENTER = 0
 
 # Arduino control settings
-ARDUINO_PORT = 'COM7'
+ARDUINO_PORT = 'COM3'
 ARDUINO_BAUDRATE = 115200
 
 # Mango rotation settings

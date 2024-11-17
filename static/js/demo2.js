@@ -215,7 +215,11 @@ $(document).ready(function () {
 
         $("#total-disease-area").text(conclusionData.total_disease_area || 'N/A');
         $("#total-mango-surface-area").text(conclusionData.total_mango_surface_area || 'N/A');
-        $("#disease-area-percentage").text(conclusionData.disease_area_percentage || 'N/A');
+        $("#disease-area-percentage").text(
+            conclusionData.disease_area_percentage 
+                ? (parseFloat(conclusionData.disease_area_percentage) * 100).toFixed(2) + '%' 
+                : 'N/A'
+        );
         $("#final-conclusion").text(conclusionData.conclusion || 'No conclusion available.');
     }
 

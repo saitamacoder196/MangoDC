@@ -160,7 +160,7 @@ def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
     disease_contours = find_disease_contours(disease_mask)
 
     if not disease_contours:
-        print("Không phát hiện vùng bệnh")
+        # print("Không phát hiện vùng bệnh")
         return image_no_bg, 0, cv2.contourArea(mango_contour), 0, [], [], []
 
     result_image = draw_contours(image_no_bg, mango_contour, disease_contours)
@@ -168,10 +168,10 @@ def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
 
     bounding_boxes = cut_disease_bounding_boxes(image_no_bg, disease_contours)
     disease_predictions = predict_disease(bounding_boxes, mangoddsnet_model)
-    scale_ratio = 0.5 * 0.56  # cho ảnh mặt
+    # scale_ratio = 0.5 * 0.56  # cho ảnh mặt
     msis = MSISDefectMeasurement(scale_ratio=scale_ratio)
-    total_defect_area, face_area, result_image = msis.measure_defect_area(image, disease_contours, is_side_view=True)
-    return result_image, total_defect_area, face_area, result_image, disease_contours, bounding_boxes, disease_predictions
+    total_defect_area, face_area, _ = msis.measure_defect_area(image, disease_contours, is_side_view=True)
+    return result_image, total_defect_area, face_area, disease_contours, bounding_boxes, disease_predictions
 
 
 def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsnet_model, scale_ratio):
@@ -186,8 +186,7 @@ def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsne
     }
 
     try:
-        result_image, disease_area, mango_area, image_result, disease_contours, bounding_boxes, disease_predictions = process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
-        pdb.set_trace()
+        result_image, disease_area, mango_area, disease_contours, bounding_boxes, disease_predictions = process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
         base_name = os.path.basename(image_path)
         result_image_path = os.path.join(output_folder, f"processed_{base_name}")
         cv2.imwrite(result_image_path, result_image)
