@@ -8,6 +8,7 @@ from myLib.BaslerCamera import camera
 from myLib.Control import control
 from myLib.FindFace import find
 from myLib.ImageProcess import Processing
+from myLib.MSISDM import MSISDefectMeasurement
 from mysocket import WebSocketServer
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -147,7 +148,7 @@ def predict_disease(bounding_boxes, model):
             predictions.append(None)  # Hoặc một giá trị mặc định khác
     return predictions
 
-def process_single_image(image_path, unet_model, mangoddsnet_model):
+def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio):
     image = read_image(image_path)
     image_no_bg = remove_background_from_image(image, unet_model)
     if image_no_bg is None:
@@ -163,15 +164,17 @@ def process_single_image(image_path, unet_model, mangoddsnet_model):
         return image_no_bg, 0, cv2.contourArea(mango_contour), 0, [], [], []
 
     result_image = draw_contours(image_no_bg, mango_contour, disease_contours)
-    mango_area, disease_area, disease_percentage = calculate_areas(mango_contour, disease_contours)
+    # mango_area, disease_area, disease_percentage = calculate_areas(mango_contour, disease_contours)
 
     bounding_boxes = cut_disease_bounding_boxes(image_no_bg, disease_contours)
     disease_predictions = predict_disease(bounding_boxes, mangoddsnet_model)
+    scale_ratio = 0.5 * 0.56  # cho ảnh mặt
+    msis = MSISDefectMeasurement(scale_ratio=scale_ratio)
+    total_defect_area, face_area, result_image = msis.measure_defect_area(image, disease_contours, is_side_view=True)
+    return result_image, total_defect_area, face_area, result_image, disease_contours, bounding_boxes, disease_predictions
 
-    return result_image, disease_area, mango_area, disease_percentage, disease_contours, bounding_boxes, disease_predictions
 
-
-def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsnet_model):
+def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsnet_model, scale_ratio):
     result_json = {
         "original_image": image_path,
         "processed_image": "",
@@ -183,12 +186,13 @@ def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsne
     }
 
     try:
-        result_image, disease_area, mango_area, disease_percentage, disease_contours, bounding_boxes, disease_predictions = process_single_image(image_path, unet_model, mangoddsnet_model)
+        result_image, disease_area, mango_area, image_result, disease_contours, bounding_boxes, disease_predictions = process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
         pdb.set_trace()
         base_name = os.path.basename(image_path)
         result_image_path = os.path.join(output_folder, f"processed_{base_name}")
         cv2.imwrite(result_image_path, result_image)
         
+        disease_percentage = round(disease_area / mango_area , 4) * 100
         result_json["processed_image"] = result_image_path
         result_json["mango_area"] = mango_area
         result_json["disease_area"] = disease_area
@@ -365,12 +369,12 @@ class RunTime(WebSocketServer):
                     for i in tqdm(range(len(self.center)), desc="Processing center images", unit="image"):
                         center_path = f"{self.folder_name}/{self.numMango}-Center_{i+1}.jpg"
                         cv2.imwrite(center_path, self.center[i])
-                        pred_results[f"Center_{i+1}"] = analyze_single_mango_image(center_path, self.prediction_folder, unet_model, mangoddsnet_model) 
+                        pred_results[f"Center_{i+1}"] = analyze_single_mango_image(center_path, self.prediction_folder, unet_model, mangoddsnet_model, SCALE_CENTER) 
 
                     for i in tqdm(range(len(self.left)), desc="Processing left images", unit="image"):
                         left_path = f"{self.folder_name}/{self.numMango}-Left_{i+1}.jpg"
                         cv2.imwrite(left_path, self.left[i])
-                        pred_results[f"Left_{i+1}"] = analyze_single_mango_image(left_path, self.prediction_folder, unet_model, mangoddsnet_model)
+                        pred_results[f"Left_{i+1}"] = analyze_single_mango_image(left_path, self.prediction_folder, unet_model, mangoddsnet_model, SCALE_LEFT)
                     # for i in range(len(self.right)):
                     #     right_path = f"{folder_name}/{self.numMango}-Right_{i+1}.jpg"
                     #     cv2.imwrite(right_path, self.right[i])

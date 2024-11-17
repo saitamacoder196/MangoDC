@@ -63,9 +63,9 @@ def get_CenterMask(face):
 
     demo = face.copy()
     cv2.drawContours(demo, [cnt_Mango], 0, (0,255,0), 2)
-    cv2.imshow("duong vien lon nhat", demo)
-    cv2.imshow("mask0", mask_Mango)
-    cv2.waitKey(0)
+    # cv2.imshow("duong vien lon nhat", demo)
+    # cv2.imshow("mask0", mask_Mango)
+    # cv2.waitKey(0)
 
     '''Tìm ảnh nhị phân quả xoài (LOẠI BỎ CUỐN)'''
     rmStemKernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (50, 50))#Cấu trúc bào mòn (Hình ellipse (trục lớn 50pixels, trục nhỏ 50pixels))
