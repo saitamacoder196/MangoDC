@@ -161,7 +161,7 @@ def process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
 
     if not disease_contours:
         # print("Không phát hiện vùng bệnh")
-        return image_no_bg, 0, cv2.contourArea(mango_contour), 0, [], [], []
+        return image_no_bg, 0, cv2.contourArea(mango_contour), [], [], []
 
     result_image = draw_contours(image_no_bg, mango_contour, disease_contours)
     # mango_area, disease_area, disease_percentage = calculate_areas(mango_contour, disease_contours)
@@ -186,6 +186,7 @@ def analyze_single_mango_image(image_path, output_folder, unet_model, mangoddsne
     }
 
     try:
+        
         result_image, disease_area, mango_area, disease_contours, bounding_boxes, disease_predictions = process_single_image(image_path, unet_model, mangoddsnet_model, scale_ratio)
         base_name = os.path.basename(image_path)
         result_image_path = os.path.join(output_folder, f"processed_{base_name}")
