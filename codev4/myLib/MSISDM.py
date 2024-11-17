@@ -137,28 +137,35 @@ class MSISDefectMeasurement:
         return box_coordinates
 
     def measure_defect_area(self, image, defect_contours, is_side_view=True):
-        """Đo và lưu ảnh các bước xử lý"""
-        # Lưu ảnh gốc
-        self.save_debug_image(image, "00_original_image")
-
+        """
+        Đo diện tích vết bệnh và diện tích mặt xoài
+        Returns:
+            total_defect_area: Tổng diện tích vết bệnh
+            face_area: Diện tích mặt xoài 
+            result_image: Ảnh kết quả với các vết bệnh được đánh dấu
+        """
         # 1. Xác định vùng xoài
         mask_mango, mask_removed_stem = mod.get_CenterMask(image)
-        self.save_debug_image(mask_mango, "04_mango_mask")
-        self.save_debug_image(mask_removed_stem, "05_removed_stem_mask")
 
         # 2. Tạo các lát cắt
         slices = self.generate_slices(mask_removed_stem)
 
-        # Vẽ contour khuyết điểm lên ảnh gốc để kiểm tra
+        # 3. Tính diện tích toàn bộ mặt xoài
+        face_area = 0
+        for i in range(self.NUM_SLICES):
+            num_pixels = cv2.countNonZero(slices[i])
+            if num_pixels > 0:
+                area = self.calculate_area_for_slice(num_pixels, i, is_side_view)
+                face_area += area
+
+        # 4. Vẽ contour khuyết điểm lên ảnh gốc 
         defect_visualization = image.copy()
         cv2.drawContours(defect_visualization, defect_contours, -1, (0,255,0), 2)
-        self.save_debug_image(defect_visualization, "07_detected_defects")
 
-        # 4. Tính diện tích và vẽ kết quả
+        # 5. Tính diện tích vết bệnh và vẽ kết quả
         result_image = image.copy()
-        total_area = 0
+        total_defect_area = 0
         
-        # Tạo ảnh để visualize các vùng được chấp nhận/loại bỏ
         accepted_regions = np.zeros_like(mask_mango)
         rejected_regions = np.zeros_like(mask_mango)
 
@@ -169,7 +176,6 @@ class MSISDefectMeasurement:
             S1 = 0  # Diện tích trong vùng chấp nhận
             S2 = 0  # Diện tích trong vùng loại bỏ
             
-            # Tạo ảnh minh họa cho từng khuyết điểm
             defect_slices_vis = np.zeros_like(mask_mango)
                 
             for i in range(self.NUM_SLICES):
@@ -177,7 +183,6 @@ class MSISDefectMeasurement:
                 num_pixels = cv2.countNonZero(slice_defect)
                 
                 if num_pixels > 0:
-                    # Tính diện tích cho lát cắt này
                     area = self.calculate_area_for_slice(num_pixels, i, is_side_view)
                     
                     if i >= self.EXCLUDED_SLICES:
@@ -189,11 +194,10 @@ class MSISDefectMeasurement:
                         defect_slices_vis = cv2.add(defect_slices_vis, 
                                                 (slice_defect > 0).astype(np.uint8) * 128)
 
-            # Lưu ảnh phân tích từng khuyết điểm
-            self.save_debug_image(defect_slices_vis, f"08_defect_{idx+1}_slices")
-
             if S1 > 0.75 * S2:
-                total_area += (S1 + S2)
+                defect_area = S1 + S2
+                total_defect_area += defect_area
+                
                 # Vẽ contour và diện tích
                 cv2.drawContours(result_image, [cnt], -1, (0, 0, 255), 2)
                 cv2.drawContours(accepted_regions, [cnt], -1, 255, -1)
@@ -202,15 +206,21 @@ class MSISDefectMeasurement:
                 if M["m00"] != 0:
                     cx = int(M["m10"] / M["m00"])
                     cy = int(M["m01"] / M["m00"])
-                    cv2.putText(result_image, f'{S1 + S2:.1f}mm2',
-                              (cx-20, cy), cv2.FONT_HERSHEY_SIMPLEX,
-                              0.5, (255, 255, 255), 1)
+                    cv2.putText(result_image, f'{defect_area:.1f}mm2',
+                            (cx-20, cy), cv2.FONT_HERSHEY_SIMPLEX,
+                            0.5, (255, 255, 255), 1)
             else:
                 cv2.drawContours(rejected_regions, [cnt], -1, 255, -1)
 
-        # Lưu các ảnh kết quả cuối cùng
-        self.save_debug_image(accepted_regions, "09_accepted_defects")
-        self.save_debug_image(rejected_regions, "10_rejected_defects")
-        self.save_debug_image(result_image, "11_final_result")
+        # Vẽ diện tích toàn bộ mặt xoài lên ảnh
+        cv2.putText(result_image, f'Face Area: {face_area:.1f}mm2',
+                    (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
+                    1.0, (0, 255, 0), 2)
+        cv2.putText(result_image, f'Defect Area: {total_defect_area:.1f}mm2',
+                    (10, 70), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0, (0, 0, 255), 2)
+        cv2.putText(result_image, f'Defect Ratio: {(total_defect_area/face_area*100):.1f}%',
+                    (10, 110), cv2.FONT_HERSHEY_SIMPLEX,
+                    1.0, (255, 0, 0), 2)
 
-        return total_area, result_image
+        return total_defect_area, face_area, result_image
